@@ -10,11 +10,16 @@ export default function Contact() {
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setStatusMessage("");
+
     if (!name.trim() || !email.trim() || !message.trim()) {
-      alert("Please supply Name, Email, and message context parameters.");
+      setError("Please supply Name, Email, and a message before submitting.");
       return;
     }
 
@@ -25,22 +30,23 @@ export default function Contact() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, phone, message })
       });
+
       let data;
       try {
         data = await res.json();
       } catch (jsonErr) {
-        throw new Error("Invalid Response Body");
+        throw new Error("Invalid response from the contact service.");
       }
-      
+
       if (res.ok && data.success) {
         setSuccess(true);
+        setStatusMessage(data.message || "Inquiry successfully submitted.");
       } else {
-        throw new Error(data?.error || "Server processing fault");
+        throw new Error(data?.error || "Server processing fault.");
       }
-    } catch (err) {
-      console.warn("API subscription issue, falling back to local client secure sync:", err);
-      
-      // Save locally to localStorage so it is NOT lost and can be viewed in Admin Dashboard offline!
+    } catch (err: any) {
+      console.warn("API contact issue, falling back to local inquiry backup:", err);
+
       try {
         const localInquiries = JSON.parse(localStorage.getItem("aura_local_inquiries") || "[]");
         const newInquiry = {
@@ -55,12 +61,12 @@ export default function Contact() {
         };
         localInquiries.push(newInquiry);
         localStorage.setItem("aura_local_inquiries", JSON.stringify(localInquiries));
+        setSuccess(true);
+        setStatusMessage("The inquiry was saved locally as a backup because the contact service was unavailable.");
       } catch (storageErr) {
         console.error("Local storage sync error:", storageErr);
+        setError(err?.message || "Unable to submit inquiry at this time.");
       }
-
-      // Transition to success state organically so customer experiences an ultra-smooth submission!
-      setSuccess(true);
     } finally {
       setLoading(false);
     }
@@ -96,6 +102,11 @@ export default function Contact() {
             
             {!success ? (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-xs">
+                    {error}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name</label>
@@ -173,6 +184,9 @@ export default function Contact() {
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   Your inquiry indices were written safely to our databases files. A representative will connect on your email or phone shortly.
                 </p>
+                {statusMessage && (
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">{statusMessage}</p>
+                )}
                 <div className="pt-2">
                   <button
                     id="reset-form-success"
@@ -182,6 +196,8 @@ export default function Contact() {
                       setEmail("");
                       setPhone("");
                       setMessage("");
+                      setError("");
+                      setStatusMessage("");
                     }}
                     className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all"
                   >
