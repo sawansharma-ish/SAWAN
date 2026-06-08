@@ -69,6 +69,7 @@ export default function App() {
         user={user}
         isAdmin={isAdmin}
         logout={handleLogout}
+        openQuote={handleOpenQuote}
       />
 
       {/* 3. Operational views hub content */}

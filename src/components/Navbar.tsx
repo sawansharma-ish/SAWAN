@@ -8,9 +8,10 @@ interface NavbarProps {
   user: any;
   isAdmin: boolean;
   logout: () => void;
+  openQuote: (service?: string) => void;
 }
 
-export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, logout }: NavbarProps) {
+export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, logout, openQuote }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Hidden admin access from main visitor list as requested!
@@ -57,7 +58,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
 
             {/* Right Hand: Auth or Client Portal Status + CTA CTA */}
             <div className="w-[340px] flex items-center justify-end gap-3.5">
-              {user ? (
+              {user && (
                 <div className="flex items-center gap-2.5 bg-[#FFFDF2] px-3 py-1.5 rounded-xl border border-black/10">
                   <span className="text-xs font-semibold text-black flex items-center gap-1">
                     <User size={13} className="text-black" />
@@ -79,20 +80,11 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                     <LogOut size={13} />
                   </button>
                 </div>
-              ) : (
-                <button
-                  id="nav-login-btn"
-                  onClick={() => setCurrentPage("login")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-black/10 hover:border-black/30 text-black rounded-xl text-xs font-semibold bg-[#FFFDF2] transition-all cursor-pointer"
-                >
-                  <LogIn size={13} />
-                  Portal Sign-In
-                </button>
               )}
 
               <button
                 id="nav-cta-btn"
-                onClick={() => setCurrentPage("contact")}
+                onClick={() => openQuote()}
                 className="px-4 py-2 bg-black hover:bg-neutral-900 text-[#FFFDF2] font-semibold rounded-xl text-xs shadow-md shadow-black/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 Get Free Estimate
@@ -173,7 +165,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
           <hr className="border-black/10" />
 
           <div className="flex flex-col gap-3">
-            {user ? (
+            {user && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-[#FFFDF2] rounded-xl border border-black/10">
                   <span className="text-sm font-semibold text-black flex items-center gap-1.5">
@@ -202,23 +194,12 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                   Client Portal Dashboard
                 </button>
               </div>
-            ) : (
-              <button
-                id="nav-mob-login-btn"
-                onClick={() => {
-                  setCurrentPage("login");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-center py-2.5 bg-[#FFFDF2] border border-black/15 text-black rounded-xl text-xs font-bold uppercase tracking-wider"
-              >
-                Sign In to Client Portal
-              </button>
             )}
 
             <button
               id="nav-mob-cta-btn"
               onClick={() => {
-                setCurrentPage("contact");
+                openQuote();
                 setMobileMenuOpen(false);
               }}
               className="w-full py-3 text-center bg-black text-[#FFFDF2] rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-neutral-900"

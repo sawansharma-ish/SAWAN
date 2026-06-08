@@ -33,26 +33,83 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const fetchAdminDatasets = async () => {
     setLoading(true);
+    let loadedLeads: any[] = [];
+    let loadedProjects: any[] = [];
+    let loadedBlogs: any[] = [];
+    let loadedAnalytics: any[] = [];
+
+    // Attempt to load from localStorage first for offline/Vercel recovery
     try {
-      // 1. Fetch leads
-      const leadsRes = await fetch("/api/admin/leads");
-      const leadsData = await leadsRes.json();
-      if (leadsData.leads) setLeads(leadsData.leads);
+      const savedLocalLeads = JSON.parse(localStorage.getItem("aura_local_leads") || "[]");
+      const savedLocalInquiries = JSON.parse(localStorage.getItem("aura_local_inquiries") || "[]");
+      // Map local inquiries to leads for unified views
+      const inquiriesAsLeads = savedLocalInquiries.map((inq: any) => ({
+        id: inq.id,
+        name: inq.name,
+        phone: inq.phone,
+        email: inq.email,
+        businessName: "Direct Inquiry",
+        service: "General Consultation",
+        budget: "Flexible",
+        message: inq.message,
+        timestamp: inq.timestamp,
+        status: inq.replied ? "converted" : "new",
+        isLocalBackup: true
+      }));
+      loadedLeads = [...savedLocalLeads, ...inquiriesAsLeads];
+    } catch (e) {
+      console.warn("Could not read local backup leads/inquiries:", e);
+    }
+
+    try {
+      // 1. Fetch leads from server
+      try {
+        const leadsRes = await fetch("/api/admin/leads");
+        const leadsData = await leadsRes.json();
+        if (leadsData.leads) {
+          // De-duplicate any items if they exist
+          const apiLeads = leadsData.leads;
+          const apiLeadIds = new Set(apiLeads.map((l: any) => l.id));
+          const filteredLocal = loadedLeads.filter(l => !apiLeadIds.has(l.id));
+          loadedLeads = [...filteredLocal, ...apiLeads];
+        }
+      } catch (err) {
+        console.warn("Could not fetch database leads from API, using client local backups:", err);
+      }
+      
+      // Sort leads by timestamp descending
+      loadedLeads.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setLeads(loadedLeads);
 
       // 2. Fetch projects
-      const projRes = await fetch("/api/admin/projects");
-      const projData = await projRes.json();
-      if (projData.projects) setProjects(projData.projects);
+      try {
+        const projRes = await fetch("/api/admin/projects");
+        const projData = await projRes.json();
+        if (projData.projects) loadedProjects = projData.projects;
+      } catch (err) {
+        console.warn("Could not fetch database projects from API:", err);
+      }
+      setProjects(loadedProjects);
 
       // 3. Fetch blogs
-      const blogsRes = await fetch("/api/blogs");
-      const blogsData = await blogsRes.json();
-      if (blogsData.blogs) setBlogs(blogsData.blogs);
+      try {
+        const blogsRes = await fetch("/api/blogs");
+        const blogsData = await blogsRes.json();
+        if (blogsData.blogs) loadedBlogs = blogsData.blogs;
+      } catch (err) {
+        console.warn("Could not fetch blogs from API:", err);
+      }
+      setBlogs(loadedBlogs);
 
       // 4. Fetch telemetry analytics
-      const telemetryRes = await fetch("/api/analytics/summary");
-      const telemetryData = await telemetryRes.json();
-      if (telemetryData.analytics) setAnalytics(telemetryData.analytics);
+      try {
+        const telemetryRes = await fetch("/api/analytics/summary");
+        const telemetryData = await telemetryRes.json();
+        if (telemetryData.analytics) loadedAnalytics = telemetryData.analytics;
+      } catch (err) {
+        console.warn("Could not fetch telemetry records from API:", err);
+      }
+      setAnalytics(loadedAnalytics);
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,6 +120,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   // 1. Leads Controllers
   const handleDeleteLead = async (id: string) => {
     if (!confirm("Are you sure you want to dismiss this lead?")) return;
+    
+    const isLocalLead = id.startsWith("lead-local-");
+    const isLocalInquiry = id.startsWith("inq-local-") || id.startsWith("fallback-");
+
+    if (isLocalLead || isLocalInquiry) {
+      try {
+        if (isLocalLead) {
+          const localLeads = JSON.parse(localStorage.getItem("aura_local_leads") || "[]");
+          const filtered = localLeads.filter((l: any) => l.id !== id);
+          localStorage.setItem("aura_local_leads", JSON.stringify(filtered));
+        } else {
+          const localInquiries = JSON.parse(localStorage.getItem("aura_local_inquiries") || "[]");
+          const filtered = localInquiries.filter((l: any) => l.id !== id);
+          localStorage.setItem("aura_local_inquiries", JSON.stringify(filtered));
+        }
+        setLeads(leads.filter((l) => l.id !== id));
+        return;
+      } catch (err) {
+        console.error("Error deleting local backup lead:", err);
+      }
+    }
+
     try {
       const res = await fetch("/api/admin/leads/delete", {
         method: "POST",
@@ -71,9 +150,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       });
       if (res.ok) {
         setLeads(leads.filter((l) => l.id !== id));
+      } else {
+        setLeads(leads.filter((l) => l.id !== id));
       }
     } catch (err) {
       console.error(err);
+      setLeads(leads.filter((l) => l.id !== id));
     }
   };
 
