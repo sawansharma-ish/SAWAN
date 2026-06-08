@@ -476,7 +476,7 @@ app.post("/api/auth/login", (req, res) => {
   if (
     (lowerEmail === "admin@apexagency.ai" && password === "admin") ||
     (lowerEmail === "admin@aurawebstudio.com" && password === "admin") ||
-    (lowerEmail === "sawanforwork@gmail.com" && password === "Sawan@1417")
+    (lowerEmail === "sawanforwork@gmail.com" && password === "Admin@1417")
   ) {
     return res.json({
       success: true,

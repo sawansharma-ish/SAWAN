@@ -114,7 +114,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         <div className="text-center space-y-3 flex flex-col items-center justify-center">
           <Logo variant="footer" />
           <div className="space-y-1 text-center">
-            <h2 className="font-display font-extrabold text-xl sm:text-2xl text-white">Client Portal Entrance</h2>
+            <h2 className="font-display font-extrabold text-xl sm:text-2xl text-white">Sign In Portal</h2>
             <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Secure Access Center</p>
           </div>
         </div>
@@ -173,12 +173,6 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-violet-500 focus:outline-none text-white transition-all placeholder-slate-600"
                 />
-              </div>
-
-              <div className="text-[10px] bg-slate-900 border border-slate-800 p-2.5 rounded-xl leading-relaxed text-slate-400">
-                <div className="font-bold text-slate-200 mb-0.5">AUTH DEMO CREDENTIALS:</div>
-                <div>Client: <strong className="text-violet-300 font-mono">user@demo.com</strong> / <strong className="text-violet-300 font-mono">password</strong></div>
-                <div>Custom Admin: <strong className="text-cyan-300 font-mono">sawanforwork@gmail.com</strong> / <strong className="text-cyan-300 font-mono">Sawan@1417</strong></div>
               </div>
 
               <button
