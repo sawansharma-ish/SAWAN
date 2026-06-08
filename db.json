@@ -1,0 +1,558 @@
+{
+  "users": [
+    {
+      "id": "u-1",
+      "name": "Sawan Sharma",
+      "email": "sawanforwork@gmail.com",
+      "phone": "+91 89297 57028",
+      "passwordHash": "password",
+      "registerDate": "2026-06-01T10:00:00Z",
+      "lastLogin": "2026-06-07T15:29:02Z",
+      "activityHistory": [
+        {
+          "action": "Register",
+          "timestamp": "2026-06-01T10:00:00Z",
+          "details": "Registered demo account."
+        },
+        {
+          "action": "Login",
+          "timestamp": "2026-06-07T15:29:02Z",
+          "details": "Logged into client dashboard successfully."
+        }
+      ]
+    },
+    {
+      "id": "u-2",
+      "name": "John Doe",
+      "email": "user@demo.com",
+      "phone": "+91 99999 88888",
+      "passwordHash": "password",
+      "registerDate": "2026-06-02T12:00:00Z",
+      "lastLogin": "2026-06-06T18:30:00Z",
+      "activityHistory": [
+        {
+          "action": "Register",
+          "timestamp": "2026-06-02T12:00:00Z",
+          "details": "Registered demo account."
+        }
+      ]
+    }
+  ],
+  "leads": [
+    {
+      "id": "lead-1",
+      "name": "Dr. Vikram Mehta",
+      "phone": "+91 98123 45678",
+      "email": "mehta.dentistry@gmail.com",
+      "businessName": "Mehta Dental Clinic",
+      "service": "AI Website & Custom Booking Setup",
+      "budget": "₹40,000 - ₹60,000",
+      "message": "Looking for an eye-catching dentistry web site and booking system for patients in Gokalpuri, Delhi.",
+      "timestamp": "2026-06-07T10:15:00Z",
+      "status": "new"
+    },
+    {
+      "id": "lead-2",
+      "name": "Rahul Khanna",
+      "phone": "+91 99000 11223",
+      "email": "rahul@ironcoregym.in",
+      "businessName": "Iron Core Fitness",
+      "service": "Landing Page & Ad Automation",
+      "budget": "₹20,000 - ₹40,000",
+      "message": "I want a high-ROI landing page to capture fitness memberships for our new branch opening next month.",
+      "timestamp": "2026-06-06T14:42:00Z",
+      "status": "contacted"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "inq-1",
+      "name": "Meera Nair",
+      "email": "meera.nair@glowsalon.com",
+      "phone": "+91 98888 77777",
+      "message": "Is Google Maps integration included in your basic plan?",
+      "timestamp": "2026-06-07T11:00:00Z",
+      "replied": true,
+      "replyText": "Yes! All packages, including our Basic Plan, come with complete Google Maps pinning, Local SEO microdata, and Contact Form setups."
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "userId": "u-1",
+      "userName": "Sawan Sharma",
+      "userEmail": "sawanforwork@gmail.com",
+      "title": "Aura E-Commerce Store & Client Hub",
+      "description": "High-end corporate storefront running custom automated systems, optimized for mobile checkout speed and WhatsApp dynamic confirmations.",
+      "serviceType": "Website Development",
+      "budget": "₹80,000",
+      "timeline": "5 Weeks",
+      "progress": 35,
+      "status": "UI/UX Design",
+      "submissionDate": "2026-06-02T11:20:00Z",
+      "files": [
+        {
+          "name": "brand_guidelines.pdf",
+          "url": "#",
+          "uploadedAt": "2026-06-02T11:25:00Z",
+          "size": "2.4 MB"
+        },
+        {
+          "name": "product_catalog.xlsx",
+          "url": "#",
+          "uploadedAt": "2026-06-02T11:30:00Z",
+          "size": "1.2 MB"
+        }
+      ],
+      "messages": [
+        {
+          "sender": "user",
+          "text": "Excited to get this project moving! I have uploaded the brand guide and starting inventory spreadsheet.",
+          "timestamp": "2026-06-02T11:32:00Z"
+        },
+        {
+          "sender": "admin",
+          "text": "Hello Sawan! Welcome to AURA WEB. We have reviewed your documents and are currently drafting the wireframe mocks. Looking forward to reviewing the designs on Wednesday!",
+          "timestamp": "2026-06-03T09:15:00Z"
+        }
+      ],
+      "adminNotes": "Wireframes are in progress. Follow up on product variations list."
+    }
+  ],
+  "blogs": [
+    {
+      "id": "blog-1",
+      "title": "Why 87% of Local Business Websites Fail to Attract Customers (And How to Fix It)",
+      "slug": "why-local-business-websites-fail",
+      "excerpt": "Most local websites are designed as static business flyers. Discover how to turn your website into a 24/7 lead-generation asset.",
+      "content": "## The Static Flyer Trap\nMost local business owners treat their websites like online business cards. They hire a freelancer, list their services, put their phone number on the contact page, and wait. Months pass, and they get exactly zero customer inquiries online.\n\nWhy? Because static pages don't motivate anyone to take action. When a visitor lands on your page, they are usually in immediate search of a solution. If they don't find a direct way to schedule a consultation, claim an offer, or calculate their requirements, they click away instantly to a competitor.\n\n### How to Turn Your Static Site into a Sales Engine\n\nTo elevate your conversion rates, your website must implement interactive systems:\n\n1. **Intelligent Capture Forms:** Trade-wide templates are boring. Replace them with specific value propositions, like a 'Get an Instant Clinic Estimate' or 'Unlock a 3day gym pass'.\n2. **Instant Auto-Responders:** When clients submit a lead, they expect action. Linking your forms to automatic SMS/email or a WhatsApp template ensures they are caught before they cool down.\n3. **Google Maps Optimization:** Dynamic embedded location maps, verified schema microdata, and localized reviews integration are critical to climb the Search results.\n\n### The Conversion Bottom Line\nAn eye-catching design is only 10% of the battle. The remaining 90% is conversion architecture. Build features that capture information, capture intent, and handle bookings automatically. Let your website work while you sleep.",
+      "category": "Lead Generation",
+      "publishedDate": "2026-06-05",
+      "readTime": "5 Min Read",
+      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
+      "author": "Sawan Sharma, Founder & Chief Architect"
+    },
+    {
+      "id": "blog-2",
+      "title": "Boost Local Store Visits by 200%: The Complete Google Maps & SEO Blueprint",
+      "slug": "boost-store-visits-google-maps-seo",
+      "excerpt": "Learn the secrets of Local SEO and Google Maps optimization to dominate local search terms and drive customers to your storefront.",
+      "content": "## Local Dominance is the New Gold Rush\nIf you run a dental clinic, salon, gym, or restaurant, your clients are located within a 5-mile radius of your physical location. They aren't looking for a national brand—they search terms like \"hair salon near me\" or \"best dentist in Delhi\".\n\nIf your business isn't one of the three featured results in the Google Local Pack (the Map Section), you are virtually invisible to 75% of local searches.\n\n### Step-by-Step Local Maps DOMINATOR Checklist\n\n* **Perfect Schema Formatting:** Your website code should contain highly detailed JSON-LD schema describing your local business coordinates, hours, accepted pay structure, and services.\n* **Responsive Page Architecture:** Google prioritizes responsive, fast-loading pages on mobile networks. If your page takes 7 seconds to launch, your Google Search ranks plummet.\n* **Dynamic Location Landing Pages:** If you target multiple sectors or neighborhoods, craft dedicated, content-rich landing pages containing custom embedded maps, localized reviews, and geographical keywords.\n\n### The Power of Automation\nOur team specializes in bridging your local maps directly into a custom agency website. We configure instant booking widgets and map tracking to guarantee you capture regional buyers at the moment of peak intent.",
+      "category": "Local SEO",
+      "publishedDate": "2026-06-01",
+      "readTime": "7 Min Read",
+      "image": "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&q=80&w=800",
+      "author": "Sawan Sharma, Founder & Chief Architect"
+    },
+    {
+      "id": "blog-3",
+      "title": "The Magic of WhatsApp Automation for Local Businesses",
+      "slug": "whatsapp-automation-local-business",
+      "excerpt": "Integrate floating WhatsApp widgets and automated booking systems to reduce cancellation rates and keep customers engaged.",
+      "content": "## Customers Don't Read Emails Anymore\nIn 2026, the average open rate for marketing and operational emails hangs at a dismal 18-20%. Meanwhile, WhatsApp messages boast an unbelievable **98% open rate**, with most replies occurring within 90 seconds.\n\nIf you are still requiring local clients to check their spam folders for appointment details or gym sign-up links, you are bleeding customers before their first session.\n\n### The Floating WhatsApp Widget Secret\n\nBy adding a highly styled, floating WhatsApp button to your bottom right margin, you accomplish two critical psychological wins:\n\n1. **Trust Instantly:** It communicates that a real, human operator is available to answer questions in real time.\n2. **Path of Least Friction:** It removes complex form-filling steps. One click, and the client starts talking to you natively in their favorite app.\n\n### How to Automate Appointments\nOnce the visitor is routed from your high-conversion landing page to WhatsApp, configure lightweight chatbots or trigger templates to instantly finalize booking times, send payment reminders, and keep cancellation rates near 0%.\n\nOur agency creates integrated website portals where bookings, contacts, and custom dashboard databases sync seamlessly into high-ROI WhatsApp triggers.",
+      "category": "Business Automation",
+      "publishedDate": "2026-05-28",
+      "readTime": "4 Min Read",
+      "image": "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?auto=format&fit=crop&q=80&w=800",
+      "author": "Sawan Sharma, Founder & Chief Architect"
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "port-1",
+      "title": "Apex Dental Clinic - Custom Booking System & Web Portal",
+      "category": "Clinics",
+      "client": "Apex Care Dental Group",
+      "duration": "4 Weeks",
+      "image": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200",
+      "beforeImage": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=60&w=800",
+      "afterImage": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800",
+      "challenge": "The dental clinic relied entirely on manual phone calls for patient booking, leading to administrative bottlenecks, high abandonment rates on social profiles, and no patient intake security regulations.",
+      "solution": "We designed and launched an ultra-modern corporate website featuring an automated online booking system, intake form digitization, WhatsApp notifications, and lightweight patient dashboard integrations.",
+      "results": [
+        "142% Increase in online patient bookings within 60 days",
+        "Saved dentists over 20 administrative hours per week",
+        "Reduced consultation cancellation rate under 4%",
+        "4.9 Star average Google review response from pre-designed flow"
+      ],
+      "websiteUrl": "https://apexcare-dental.example.com"
+    },
+    {
+      "id": "port-2",
+      "title": "Vibe Fitness Club - High-Conversion Leads Machine",
+      "category": "Gyms",
+      "client": "Vibe Fitness Studios",
+      "duration": "3 Weeks",
+      "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1200",
+      "beforeImage": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=60&w=800",
+      "afterImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
+      "challenge": "Vibe Gym had beautiful equipment but no strategy to capture online leads. Traffic from Instagram and Google was lost with a static flyer website.",
+      "solution": "Fitted a high-converting micro-funnel, visual interactive tour schedules, a free digital 3-day pass generator, custom SMS tracking triggers, and lightweight CRM integrations.",
+      "results": [
+        "340+ High-intent local leads generated in first 30 days",
+        "Average cost per acquisition reduced by 35%",
+        "Smooth corporate integration with Google Ads campaigns",
+        "Interactive trainer scheduler automated 100% of physical bookings"
+      ],
+      "websiteUrl": "https://vibe-fitness.example.com"
+    },
+    {
+      "id": "port-3",
+      "title": "Le Boulevard Bistro - Contactless Menu & Order Automation",
+      "category": "Restaurants",
+      "client": "Le Boulevard Group",
+      "duration": "2 Weeks",
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1200",
+      "beforeImage": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&q=60&w=800",
+      "afterImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800",
+      "challenge": "The restaurant was experiencing severe delays in customer waiter interactions, slow table turnover during peak lunch hours, and no digital customer loyalty collection list.",
+      "solution": "Engineered a lightning-fast QR-menu ordering web app, beautiful localized SEO cataloging, built-in dynamic loyalty punchcards, and single-click reservation automation.",
+      "results": [
+        "22% Rise in average table order value with digital upsells",
+        "Dynamic reservation engine booked out lunch tables weeks in advance",
+        "Captured over 1,200 local customer emails for loyalty newsletter"
+      ],
+      "websiteUrl": "https://leboulevard-bistro.example.com"
+    }
+  ],
+  "analytics": [
+    {
+      "id": "visit-1",
+      "ip": "157.45.18.232",
+      "country": "India",
+      "city": "Delhi",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "Google Campaign",
+      "landingPage": "/",
+      "pagesVisited": [
+        "/",
+        "/services",
+        "/pricing"
+      ],
+      "sessionDuration": 182,
+      "timestamp": "2026-06-07T08:30:00Z"
+    },
+    {
+      "id": "visit-2",
+      "ip": "103.22.41.9",
+      "country": "India",
+      "city": "Mumbai",
+      "deviceType": "Mobile",
+      "browser": "Safari",
+      "referral": "Instagram Ads",
+      "landingPage": "/",
+      "pagesVisited": [
+        "/",
+        "/portfolio"
+      ],
+      "sessionDuration": 94,
+      "timestamp": "2026-06-07T12:15:00Z"
+    },
+    {
+      "id": "visit-l3vmtolje",
+      "ip": "157.45.41.207",
+      "country": "United States",
+      "city": "San Francisco",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 24,
+      "timestamp": "2026-06-08T02:04:00.469Z"
+    },
+    {
+      "id": "visit-q146ahk82",
+      "ip": "157.45.68.147",
+      "country": "United Kingdom",
+      "city": "London",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 43,
+      "timestamp": "2026-06-08T02:04:01.295Z"
+    },
+    {
+      "id": "visit-iu4k3iiqz",
+      "ip": "157.45.158.86",
+      "country": "India",
+      "city": "Hyderabad",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 11,
+      "timestamp": "2026-06-08T02:04:02.479Z"
+    },
+    {
+      "id": "visit-bnere2r3v",
+      "ip": "157.45.55.197",
+      "country": "United States",
+      "city": "San Francisco",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 37,
+      "timestamp": "2026-06-08T02:04:03.480Z"
+    },
+    {
+      "id": "visit-54yiki12z",
+      "ip": "157.45.46.6",
+      "country": "India",
+      "city": "Chennai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 47,
+      "timestamp": "2026-06-08T02:10:18.151Z"
+    },
+    {
+      "id": "visit-5zesk0mwh",
+      "ip": "157.45.99.34",
+      "country": "India",
+      "city": "Chennai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 57,
+      "timestamp": "2026-06-08T02:10:19.144Z"
+    },
+    {
+      "id": "visit-g3u1153vr",
+      "ip": "157.45.251.212",
+      "country": "United States",
+      "city": "San Francisco",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "contact",
+      "pagesVisited": [
+        "home",
+        "contact"
+      ],
+      "sessionDuration": 34,
+      "timestamp": "2026-06-08T02:10:27.216Z"
+    },
+    {
+      "id": "visit-ighvlqrj4",
+      "ip": "157.45.59.202",
+      "country": "India",
+      "city": "Mumbai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home",
+        "contact"
+      ],
+      "sessionDuration": 31,
+      "timestamp": "2026-06-08T02:11:14.622Z"
+    },
+    {
+      "id": "visit-j10fs0uru",
+      "ip": "157.45.188.88",
+      "country": "India",
+      "city": "Hyderabad",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 23,
+      "timestamp": "2026-06-08T02:13:11.996Z"
+    },
+    {
+      "id": "visit-c7cn6fg1s",
+      "ip": "157.45.163.39",
+      "country": "India",
+      "city": "New Delhi",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 22,
+      "timestamp": "2026-06-08T02:13:12.987Z"
+    },
+    {
+      "id": "visit-tn9w1vbz4",
+      "ip": "157.45.250.198",
+      "country": "India",
+      "city": "Chennai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 17,
+      "timestamp": "2026-06-08T03:11:32.433Z"
+    },
+    {
+      "id": "visit-iw2ez2pf0",
+      "ip": "157.45.198.192",
+      "country": "India",
+      "city": "Mumbai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 29,
+      "timestamp": "2026-06-08T03:11:33.433Z"
+    },
+    {
+      "id": "visit-ml35vdd5d",
+      "ip": "157.45.85.60",
+      "country": "India",
+      "city": "New Delhi",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "pricing",
+      "pagesVisited": [
+        "home",
+        "pricing"
+      ],
+      "sessionDuration": 57,
+      "timestamp": "2026-06-08T03:15:31.614Z"
+    },
+    {
+      "id": "visit-1ev1d16j1",
+      "ip": "157.45.135.157",
+      "country": "India",
+      "city": "New Delhi",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "services",
+      "pagesVisited": [
+        "home",
+        "pricing",
+        "services"
+      ],
+      "sessionDuration": 66,
+      "timestamp": "2026-06-08T03:17:52.152Z"
+    },
+    {
+      "id": "visit-ghw1067lp",
+      "ip": "157.45.74.64",
+      "country": "India",
+      "city": "Hyderabad",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 46,
+      "timestamp": "2026-06-08T10:43:54.271Z"
+    },
+    {
+      "id": "visit-xn863ls4f",
+      "ip": "157.45.43.214",
+      "country": "India",
+      "city": "New Delhi",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 11,
+      "timestamp": "2026-06-08T10:43:55.357Z"
+    },
+    {
+      "id": "visit-gcbtykg8a",
+      "ip": "157.45.195.90",
+      "country": "United States",
+      "city": "San Francisco",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 10,
+      "timestamp": "2026-06-08T11:54:59.414Z"
+    },
+    {
+      "id": "visit-tdvc6l9hu",
+      "ip": "157.45.69.198",
+      "country": "United Kingdom",
+      "city": "London",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 51,
+      "timestamp": "2026-06-08T11:55:01.186Z"
+    },
+    {
+      "id": "visit-otexo2gkg",
+      "ip": "157.45.15.14",
+      "country": "India",
+      "city": "Chennai",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 42,
+      "timestamp": "2026-06-08T12:04:02.388Z"
+    },
+    {
+      "id": "visit-ca67nh6nl",
+      "ip": "157.45.13.205",
+      "country": "India",
+      "city": "Bangalore",
+      "deviceType": "Desktop",
+      "browser": "Chrome",
+      "referral": "aistudio.google.com",
+      "landingPage": "home",
+      "pagesVisited": [
+        "home"
+      ],
+      "sessionDuration": 48,
+      "timestamp": "2026-06-08T12:04:03.392Z"
+    }
+  ]
+}
