@@ -82,6 +82,16 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                 </div>
               )}
 
+              {!user && (
+                <button
+                  id="nav-login-btn"
+                  onClick={() => setCurrentPage("login")}
+                  className="px-4 py-2 bg-[#FFFDF2] hover:bg-white text-black font-semibold rounded-xl text-xs shadow-md shadow-black/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                >
+                  ADMIN Portal
+                </button>
+              )}
+
               <button
                 id="nav-cta-btn"
                 onClick={() => openQuote()}
