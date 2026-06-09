@@ -75,7 +75,12 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
 
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Left Brief */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.85, ease: "easeOut" }}
+            className="lg:col-span-7 space-y-6 text-center lg:text-left"
+          >
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-[#FFFDF2]/80 font-mono tracking-widest uppercase">
               <Sparkles size={14} className="text-[#FFFDF2] animate-pulse" />
               PREMIUM WEB SYSTEMS FOR LOCAL LEADERS
@@ -90,20 +95,24 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <button
+              <motion.button
                 id="hero-primary-cta"
                 onClick={() => openQuote()}
-                className="w-full sm:w-auto px-8 py-4 bg-[#FFFDF2] hover:bg-white text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-[0_0_25px_rgba(255,253,242,0.25)] shadow-md cursor-pointer"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto px-8 py-4 bg-[#FFFDF2] hover:bg-white text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:shadow-[0_0_25px_rgba(255,253,242,0.25)] shadow-md cursor-pointer"
               >
                 Claim Free CRO Audit
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 id="hero-secondary-cta"
                 onClick={() => setCurrentPage("services")}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className="w-full sm:w-auto px-8 py-4 bg-black border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 Explore Web Systems <ArrowRight size={14} />
-              </button>
+              </motion.button>
             </div>
 
             {/* Micro proof badges */}
@@ -115,10 +124,15 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
                 <span className="text-[#FFFDF2] font-bold uppercase tracking-wider">🌍 Available Worldwide</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Hero Right Interactive Mock Case */}
-          <div className="lg:col-span-5 bg-neutral-950 border border-neutral-900 p-6 rounded-3xl relative">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
+            className="lg:col-span-5 bg-neutral-950 border border-neutral-900 p-6 rounded-3xl relative"
+          >
             <div className="absolute top-4 left-4 h-2 w-2 rounded-full bg-neutral-800"></div>
             <div className="absolute top-4 left-8 h-2 w-2 rounded-full bg-neutral-850"></div>
             <div className="absolute top-4 left-12 h-2 w-2 rounded-full bg-neutral-900"></div>
@@ -154,7 +168,7 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
                 <p className="text-[9px] font-bold text-[#FFFDF2] mt-1 font-mono uppercase tracking-widest">AURA WEB ARCHITECTURE</p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -162,10 +176,17 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
       <section className="bg-[#FFFDF2] border-y border-black/10 py-10 px-4">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, idx) => (
-            <div key={idx} className="text-center md:border-r last:border-0 border-black/10">
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: idx * 0.08 }}
+              className="text-center md:border-r last:border-0 border-black/10"
+            >
               <div className="font-display font-extrabold text-3xl sm:text-4xl text-black tracking-tight">{stat.num}</div>
               <div className="text-xs text-neutral-600 font-medium font-sans uppercase mt-1 tracking-wider">{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -184,7 +205,15 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {highlights.map((hl, index) => (
-            <div key={index} className="bg-[#FFFDF2] border border-black/10 rounded-2xl p-6 hover:shadow-lg hover:border-black/30 transition-all group flex flex-col justify-between">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: index * 0.08 }}
+              whileHover={{ y: -4, boxShadow: "0 25px 50px rgba(0,0,0,0.06)" }}
+              className="bg-[#FFFDF2] border border-black/10 rounded-2xl p-6 transition-all group flex flex-col justify-between"
+            >
               <div>
                 <div className="w-12 h-12 bg-black/5 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform">
                   {hl.icon}
@@ -199,7 +228,7 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
               >
                 {hl.cta} <ArrowUpRight size={14} />
               </button>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
