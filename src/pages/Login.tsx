@@ -8,6 +8,17 @@ interface LoginProps {
   setCurrentPage: (page: string) => void;
 }
 
+// Helper function to add timeout to fetch requests
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal
+  }).finally(() => clearTimeout(timeoutId));
+}
+
 export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
   const [formType, setFormType] = useState<"signin" | "reset">("signin");
   const [loading, setLoading] = useState(false);
@@ -25,11 +36,11 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetchWithTimeout("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
-      });
+      }, 10000);
       const data = await response.json();
       if (response.ok && data.success) {
         // Store auth token if admin
@@ -41,9 +52,13 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       } else {
         setErrorMsg(data.error || "Login credentials were not recognized.");
       }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Network latency bounds exceeded. Please repeat shortly.");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      if (err.name === "AbortError") {
+        setErrorMsg("Request timeout. Server took too long to respond. Please try again.");
+      } else {
+        setErrorMsg("Network error. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -56,11 +71,11 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const response = await fetch("/api/auth/reset", {
+      const response = await fetchWithTimeout("/api/auth/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword })
-      });
+      }, 10000);
       const data = await response.json();
       if (response.ok && data.success) {
         alert("Passcode updated successfully! Sign in with your new password.");
@@ -69,9 +84,13 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       } else {
         setErrorMsg(data.error || "No client record matches that email.");
       }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Network failure updating passcode.");
+    } catch (err: any) {
+      console.error("Reset error:", err);
+      if (err.name === "AbortError") {
+        setErrorMsg("Request timeout. Server took too long to respond. Please try again.");
+      } else {
+        setErrorMsg("Network failure updating passcode.");
+      }
     } finally {
       setLoading(false);
     }
