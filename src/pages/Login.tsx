@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, LogIn, ShieldAlert, KeyRound } from "lucide-react";
+import { Sparkles, Loader2, LogIn, ArrowRight, ShieldAlert, KeyRound, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Logo } from "../components/Logo";
 
@@ -8,24 +8,15 @@ interface LoginProps {
   setCurrentPage: (page: string) => void;
 }
 
-// Helper function to add timeout to fetch requests
-function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  return fetch(url, {
-    ...options,
-    signal: controller.signal
-  }).finally(() => clearTimeout(timeoutId));
-}
-
 export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
-  const [formType, setFormType] = useState<"signin" | "reset">("signin");
+  const [formType, setFormType] = useState<"signin" | "signup" | "reset">("signin");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   // Input states
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -36,29 +27,48 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const response = await fetchWithTimeout("/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
-      }, 10000);
+      });
       const data = await response.json();
       if (response.ok && data.success) {
-        // Store auth token if admin
-        if (data.authToken) {
-          localStorage.setItem("aura_auth_token", data.authToken);
-        }
         onLoginSuccess(data.user, data.isAdmin);
         setCurrentPage(data.isAdmin ? "admin" : "dashboard");
       } else {
         setErrorMsg(data.error || "Login credentials were not recognized.");
       }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      if (err.name === "AbortError") {
-        setErrorMsg("Request timeout. Server took too long to respond. Please try again.");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Network latency bounds exceeded. Please repeat shortly.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !phone || !password) return;
+
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, password })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        onLoginSuccess(data.user, false);
+        setCurrentPage("dashboard");
       } else {
-        setErrorMsg("Network error. Please check your connection and try again.");
+        setErrorMsg(data.error || "Registration rejected. Duplicate catalog emails trace.");
       }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Registration server error.");
     } finally {
       setLoading(false);
     }
@@ -71,11 +81,11 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const response = await fetchWithTimeout("/api/auth/reset", {
+      const response = await fetch("/api/auth/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword })
-      }, 10000);
+      });
       const data = await response.json();
       if (response.ok && data.success) {
         alert("Passcode updated successfully! Sign in with your new password.");
@@ -84,13 +94,9 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       } else {
         setErrorMsg(data.error || "No client record matches that email.");
       }
-    } catch (err: any) {
-      console.error("Reset error:", err);
-      if (err.name === "AbortError") {
-        setErrorMsg("Request timeout. Server took too long to respond. Please try again.");
-      } else {
-        setErrorMsg("Network failure updating passcode.");
-      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Network failure updating passcode.");
     } finally {
       setLoading(false);
     }
@@ -108,8 +114,8 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         <div className="text-center space-y-3 flex flex-col items-center justify-center">
           <Logo variant="footer" />
           <div className="space-y-1 text-center">
-            <h2 className="font-display font-extrabold text-xl sm:text-2xl text-white">ADMIN Sign In</h2>
-            <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Secure Admin Access</p>
+            <h2 className="font-display font-extrabold text-xl sm:text-2xl text-white">Sign In Portal</h2>
+            <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Secure Access Center</p>
           </div>
         </div>
 
@@ -182,11 +188,119 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
                   </>
                 ) : (
                   <>
-                    ADMIN Sign In <LogIn size={14} />
+                    Sign In to Portal <LogIn size={14} />
                   </>
                 )}
               </button>
 
+              <div className="text-center pt-2">
+                <button
+                  id="trigger-signup"
+                  type="button"
+                  onClick={() => {
+                    setFormType("signup");
+                    setErrorMsg("");
+                  }}
+                  className="text-slate-400 text-xs hover:text-white transition-colors"
+                >
+                  New Client Member? <span className="text-violet-400 font-semibold underline">Register here</span>
+                </button>
+              </div>
+            </motion.form>
+          )}
+
+          {formType === "signup" && (
+            <motion.form
+              key="signup"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              onSubmit={handleSignUp}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[10px] font-mono text-slate-400 mb-1.5 uppercase">Full Corporate Name</label>
+                <input
+                  id="reg-name"
+                  type="text"
+                  required
+                  placeholder="e.g. Vikram Mehta"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-violet-500 focus:outline-none text-white transition-all placeholder-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-slate-400 mb-1.5 uppercase">Professional Email</label>
+                <input
+                  id="reg-email"
+                  type="email"
+                  required
+                  placeholder="e.g. vikram@mehtadentistry.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-violet-500 focus:outline-none text-white transition-all placeholder-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-slate-400 mb-1.5 uppercase">WhatsApp Contact No</label>
+                <input
+                  id="reg-phone"
+                  type="tel"
+                  required
+                  placeholder="e.g. +91 99000 77777"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-violet-500 focus:outline-none text-white transition-all placeholder-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-slate-400 mb-1.5 uppercase">Secure Password Code</label>
+                <input
+                  id="reg-password"
+                  type="password"
+                  required
+                  placeholder="Create strong passcode"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-violet-500 focus:outline-none text-white transition-all placeholder-slate-600"
+                />
+              </div>
+
+              <button
+                id="signup-btn"
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold rounded-xl text-xs transition-transform flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-violet-500/10"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={14} />
+                    Composing Client Profile Logs...
+                  </>
+                ) : (
+                  <>
+                    Complete Registration <UserPlus size={14} />
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  id="trigger-signin-back"
+                  type="button"
+                  onClick={() => {
+                    setFormType("signin");
+                    setErrorMsg("");
+                  }}
+                  className="text-slate-400 text-xs hover:text-white transition-colors"
+                >
+                  Already registered? <span className="text-violet-400 font-semibold underline">Login now</span>
+                </button>
+              </div>
             </motion.form>
           )}
 

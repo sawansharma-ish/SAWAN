@@ -4,51 +4,17 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dns from "dns";
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
 
 // Ensure DNS works smoothly
 dns.setDefaultResultOrder("ipv4first");
 
-dotenv.config();
-
 const app = express();
 const PORT = 3000;
-
-// CORS Middleware - Allow all origins for development
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
 
 app.use(express.json());
 
 // Path to durable db.json file
 const DB_PATH = path.join(process.cwd(), "db.json");
-
-const emailNotificationsEnabled = Boolean(
-  process.env.SMTP_HOST &&
-  process.env.SMTP_USER &&
-  process.env.SMTP_PASS &&
-  process.env.NOTIFICATION_EMAIL
-);
-
-const mailTransporter = emailNotificationsEnabled
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
-  : null;
 
 // Helper types
 interface ActivityLog {
@@ -463,52 +429,6 @@ function writeDB(db: DB) {
 // Ensure database seeded at launch
 const database = readDB();
 
-// ADMIN SESSION STORAGE (In-memory for this session)
-interface AuthSession {
-  userId: string;
-  email: string;
-  isAdmin: boolean;
-  token: string;
-  expiresAt: number;
-}
-
-const activeSessions = new Map<string, AuthSession>();
-
-// Helper function to generate auth token
-function generateAuthToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
-
-// Helper function to verify auth token
-function verifyAuthToken(token: string): AuthSession | null {
-  const session = activeSessions.get(token);
-  if (!session) return null;
-  if (Date.now() > session.expiresAt) {
-    activeSessions.delete(token);
-    return null;
-  }
-  return session;
-}
-
-// Middleware to check admin authentication
-function adminAuthMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No authentication token provided. Admin access requires login." });
-  }
-  
-  const token = authHeader.substring(7);
-  const session = verifyAuthToken(token);
-  
-  if (!session || !session.isAdmin) {
-    return res.status(403).json({ error: "Admin access denied. You do not have sufficient privileges." });
-  }
-  
-  // Attach session to request for downstream handlers
-  (req as any).session = session;
-  next();
-}
-
 // API ROUTES
 
 // AUTHENTICATION SYSTEM
@@ -556,26 +476,15 @@ app.post("/api/auth/login", (req, res) => {
   if (
     (lowerEmail === "admin@apexagency.ai" && password === "admin") ||
     (lowerEmail === "admin@aurawebstudio.com" && password === "admin") ||
-    (lowerEmail === "sawanforwork@gmail.com" && password === "Admin@1417")
+    (lowerEmail === "sawanforwork@gmail.com" && password === "Admin@1417") ||
+    (lowerEmail === "sawaforwork@gmail.com" && password === "Admin@1417")
   ) {
-    // Generate auth token for admin
-    const token = generateAuthToken();
-    const session: AuthSession = {
-      userId: "admin-root",
-      email: lowerEmail,
-      isAdmin: true,
-      token,
-      expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    };
-    activeSessions.set(token, session);
-
     return res.json({
       success: true,
       isAdmin: true,
-      authToken: token,
       user: {
         id: "admin-root",
-        name: lowerEmail === "sawanforwork@gmail.com" ? "Sawan Sharma [Admin]" : "Apex AI Architect",
+        name: (lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") ? "Sawan Sharma [Admin]" : "Apex AI Architect",
         email: lowerEmail,
         role: "admin",
         lastLogin: new Date().toISOString()
@@ -623,15 +532,6 @@ app.post("/api/auth/reset", (req, res) => {
   writeDB(db);
 
   res.json({ success: true, message: "Your login password has been reset successfully." });
-});
-
-app.post("/api/auth/logout", (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    activeSessions.delete(token);
-  }
-  res.json({ success: true, message: "Logged out successfully." });
 });
 
 app.post("/api/auth/profile/update", (req, res) => {
@@ -690,7 +590,7 @@ app.post("/api/leads", (req, res) => {
 
 
 // CONTACT FORM INQUIRIES
-app.post("/api/contact", async (req, res) => {
+app.post("/api/contact", (req, res) => {
   const { name, email, phone, message } = req.body;
   if (!name || !email || !message) {
     return res.status(400).json({ error: "Please enter your name, email, and the nature of your request." });
@@ -710,28 +610,7 @@ app.post("/api/contact", async (req, res) => {
   db.inquiries.push(newInq);
   writeDB(db);
 
-  if (emailNotificationsEnabled && mailTransporter) {
-    try {
-      await mailTransporter.sendMail({
-        from: `Website Notification <${process.env.SMTP_USER}>`,
-        to: process.env.NOTIFICATION_EMAIL,
-        subject: "New Website Enquiry Received",
-        text: `New inquiry received:\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "Not Provided"}\n\nMessage:\n${message}`,
-        html: `<p><strong>New inquiry received</strong></p><p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${phone || "Not Provided"}</p><p><strong>Message:</strong><br/>${message.replace(/\n/g, "<br/>")}</p>`,
-      });
-    } catch (emailError) {
-      console.error("Failed to send enquiry notification email:", emailError);
-    }
-  } else {
-    console.warn("Email notifications are not enabled. Set SMTP_HOST, SMTP_USER, SMTP_PASS, and NOTIFICATION_EMAIL in .env to enable them.");
-  }
-
-  res.status(201).json({
-    success: true,
-    message: emailNotificationsEnabled
-      ? "Inquiry successfully submitted. Notification sent."
-      : "Inquiry successfully submitted. Notification is not configured.",
-  });
+  res.status(201).json({ success: true, message: "Inquiry successfully submitted. An architect has been assigned." });
 });
 
 

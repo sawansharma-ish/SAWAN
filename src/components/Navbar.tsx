@@ -57,7 +57,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
             </div>
 
             {/* Right Hand: Auth or Client Portal Status + CTA CTA */}
-            <div className="w-[340px] flex items-center justify-end gap-3.5">
+            <div className="w-[380px] flex items-center justify-end gap-3">
               {user && (
                 <div className="flex items-center gap-2.5 bg-[#FFFDF2] px-3 py-1.5 rounded-xl border border-black/10">
                   <span className="text-xs font-semibold text-black flex items-center gap-1">
@@ -84,11 +84,11 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
 
               {!user && (
                 <button
-                  id="nav-login-btn"
+                  id="nav-admin-login-btn"
                   onClick={() => setCurrentPage("login")}
-                  className="px-4 py-2 bg-[#FFFDF2] hover:bg-white text-black font-semibold rounded-xl text-xs shadow-md shadow-black/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                  className="px-4 py-2 border border-black/20 hover:border-black hover:bg-black/5 text-black font-semibold rounded-xl text-xs transition-colors"
                 >
-                  ADMIN Portal
+                  Admin Login
                 </button>
               )}
 
@@ -206,13 +206,26 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
               </div>
             )}
 
+            {!user && (
+              <button
+                id="nav-mob-admin-login-btn"
+                onClick={() => {
+                  setCurrentPage("login");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 text-center border border-black/20 text-black hover:bg-black/5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors"
+              >
+                Admin Login
+              </button>
+            )}
+
             <button
               id="nav-mob-cta-btn"
               onClick={() => {
                 openQuote();
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-3 text-center bg-black text-[#FFFDF2] rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-neutral-900"
+              className="w-full py-3 text-[#FFFDF2] text-center bg-black rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-neutral-900"
             >
               Get Free Conversion Proposal
             </button>

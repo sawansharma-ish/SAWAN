@@ -31,15 +31,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     fetchAdminDatasets();
   }, []);
 
-  // Helper function to get auth headers
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("aura_auth_token");
-    return {
-      "Content-Type": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {})
-    };
-  };
-
   const fetchAdminDatasets = async () => {
     setLoading(true);
     let loadedLeads: any[] = [];
@@ -73,10 +64,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     try {
       // 1. Fetch leads from server
       try {
-        const leadsRes = await fetch("/api/admin/leads", {
-          method: "GET",
-          headers: getAuthHeaders()
-        });
+        const leadsRes = await fetch("/api/admin/leads");
         const leadsData = await leadsRes.json();
         if (leadsData.leads) {
           // De-duplicate any items if they exist
@@ -95,10 +83,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       // 2. Fetch projects
       try {
-        const projRes = await fetch("/api/admin/projects", {
-          method: "GET",
-          headers: getAuthHeaders()
-        });
+        const projRes = await fetch("/api/admin/projects");
         const projData = await projRes.json();
         if (projData.projects) loadedProjects = projData.projects;
       } catch (err) {
@@ -108,10 +93,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       // 3. Fetch blogs
       try {
-        const blogsRes = await fetch("/api/blogs", {
-          method: "GET",
-          headers: getAuthHeaders()
-        });
+        const blogsRes = await fetch("/api/blogs");
         const blogsData = await blogsRes.json();
         if (blogsData.blogs) loadedBlogs = blogsData.blogs;
       } catch (err) {
@@ -121,10 +103,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       // 4. Fetch telemetry analytics
       try {
-        const telemetryRes = await fetch("/api/analytics/summary", {
-          method: "GET",
-          headers: getAuthHeaders()
-        });
+        const telemetryRes = await fetch("/api/analytics/summary");
         const telemetryData = await telemetryRes.json();
         if (telemetryData.analytics) loadedAnalytics = telemetryData.analytics;
       } catch (err) {
@@ -166,7 +145,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     try {
       const res = await fetch("/api/admin/leads/delete", {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id })
       });
       if (res.ok) {
@@ -185,7 +164,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     try {
       const res = await fetch("/api/admin/projects/update", {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, progress, status })
       });
       if (res.ok) {
@@ -221,7 +200,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       const URL = editingBlog ? "/api/admin/blogs/edit" : "/api/admin/blogs/add";
       const response = await fetch(URL, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       const data = await response.json();
@@ -262,7 +241,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     try {
       const res = await fetch("/api/admin/blogs/delete", {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id })
       });
       if (res.ok) {
