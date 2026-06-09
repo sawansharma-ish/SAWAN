@@ -452,6 +452,52 @@ function writeDB(db: DB) {
 // Ensure database seeded at launch
 const database = readDB();
 
+// ADMIN SESSION STORAGE (In-memory for this session)
+interface AuthSession {
+  userId: string;
+  email: string;
+  isAdmin: boolean;
+  token: string;
+  expiresAt: number;
+}
+
+const activeSessions = new Map<string, AuthSession>();
+
+// Helper function to generate auth token
+function generateAuthToken(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+// Helper function to verify auth token
+function verifyAuthToken(token: string): AuthSession | null {
+  const session = activeSessions.get(token);
+  if (!session) return null;
+  if (Date.now() > session.expiresAt) {
+    activeSessions.delete(token);
+    return null;
+  }
+  return session;
+}
+
+// Middleware to check admin authentication
+function adminAuthMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No authentication token provided. Admin access requires login." });
+  }
+  
+  const token = authHeader.substring(7);
+  const session = verifyAuthToken(token);
+  
+  if (!session || !session.isAdmin) {
+    return res.status(403).json({ error: "Admin access denied. You do not have sufficient privileges." });
+  }
+  
+  // Attach session to request for downstream handlers
+  (req as any).session = session;
+  next();
+}
+
 // API ROUTES
 
 // AUTHENTICATION SYSTEM
@@ -501,9 +547,21 @@ app.post("/api/auth/login", (req, res) => {
     (lowerEmail === "admin@aurawebstudio.com" && password === "admin") ||
     (lowerEmail === "sawanforwork@gmail.com" && password === "Admin@1417")
   ) {
+    // Generate auth token for admin
+    const token = generateAuthToken();
+    const session: AuthSession = {
+      userId: "admin-root",
+      email: lowerEmail,
+      isAdmin: true,
+      token,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    };
+    activeSessions.set(token, session);
+
     return res.json({
       success: true,
       isAdmin: true,
+      authToken: token,
       user: {
         id: "admin-root",
         name: lowerEmail === "sawanforwork@gmail.com" ? "Sawan Sharma [Admin]" : "Apex AI Architect",
@@ -554,6 +612,15 @@ app.post("/api/auth/reset", (req, res) => {
   writeDB(db);
 
   res.json({ success: true, message: "Your login password has been reset successfully." });
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    activeSessions.delete(token);
+  }
+  res.json({ success: true, message: "Logged out successfully." });
 });
 
 app.post("/api/auth/profile/update", (req, res) => {

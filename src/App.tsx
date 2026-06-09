@@ -38,13 +38,57 @@ export default function App() {
   const handleLoginSuccess = (userProfile: any, adminRole: boolean) => {
     setUser(userProfile);
     setIsAdmin(adminRole);
+    // Persist auth state to localStorage
+    localStorage.setItem("aura_auth_user", JSON.stringify(userProfile));
+    localStorage.setItem("aura_auth_isAdmin", adminRole.toString());
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear server-side session if needed
+    const authToken = localStorage.getItem("aura_auth_token");
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": authToken ? `Bearer ${authToken}` : ""
+        },
+        body: JSON.stringify({ userId: user?.id })
+      });
+    } catch (err) {
+      console.warn("Logout API call failed:", err);
+    }
+    
     setUser(null);
     setIsAdmin(false);
+    // Clear localStorage
+    localStorage.removeItem("aura_auth_user");
+    localStorage.removeItem("aura_auth_isAdmin");
+    localStorage.removeItem("aura_auth_token");
     setCurrentPage("home");
   };
+
+  // Restore auth state from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("aura_auth_user");
+    const savedIsAdmin = localStorage.getItem("aura_auth_isAdmin");
+    if (savedUser && savedIsAdmin) {
+      try {
+        setUser(JSON.parse(savedUser));
+        const isAdminValue = savedIsAdmin === "true";
+        setIsAdmin(isAdminValue);
+        // Restore to admin page if they were logged in as admin
+        if (isAdminValue) {
+          setCurrentPage("admin");
+        }
+      } catch (err) {
+        console.warn("Could not restore auth state:", err);
+        localStorage.removeItem("aura_auth_user");
+        localStorage.removeItem("aura_auth_isAdmin");
+        localStorage.removeItem("aura_auth_token");
+      }
+    }
+  }, []);
 
   // Auto-scroll to top when page updates
   useEffect(() => {

@@ -32,6 +32,10 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       });
       const data = await response.json();
       if (response.ok && data.success) {
+        // Store auth token if admin
+        if (data.authToken) {
+          localStorage.setItem("aura_auth_token", data.authToken);
+        }
         onLoginSuccess(data.user, data.isAdmin);
         setCurrentPage(data.isAdmin ? "admin" : "dashboard");
       } else {
