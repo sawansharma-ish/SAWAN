@@ -140,6 +140,7 @@ interface DB {
   blogs: Blog[];
   portfolio: PortfolioItem[];
   analytics: VisitorLog[];
+  adminOverrides?: Record<string, string>;
 }
 
 // Default Data Seed
