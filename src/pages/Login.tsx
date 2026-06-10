@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, Loader2, LogIn, ArrowRight, ShieldAlert, KeyRound, UserPlus } from "lucide-react";
+import { Sparkles, Loader2, LogIn, ArrowRight, ShieldAlert, KeyRound, UserPlus, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Logo } from "../components/Logo";
 
@@ -12,6 +12,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
   const [formType, setFormType] = useState<"signin" | "signup" | "reset">("signin");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successBannerMsg, setSuccessBannerMsg] = useState("");
 
   // Input states
   const [name, setName] = useState("");
@@ -24,6 +25,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
   const [resetStep, setResetStep] = useState<1 | 2 | 3>(1);
   const [otpCode, setOtpCode] = useState("");
   const [devModeOtp, setDevModeOtp] = useState<string | null>(null);
+  const [otpRevealed, setOtpRevealed] = useState(false);
   const [verificationSuccessMsg, setVerificationSuccessMsg] = useState("");
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -86,7 +88,9 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
 
     setLoading(true);
     setErrorMsg("");
+    setSuccessBannerMsg("");
     setDevModeOtp(null);
+    setOtpRevealed(false);
     setVerificationSuccessMsg("");
     try {
       const response = await fetch("/api/auth/send-otp", {
@@ -94,17 +98,23 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Server returned non-JSON representation: ${responseText.slice(0, 150)}`);
+      }
       if (response.ok && data.success) {
         setDevModeOtp(data.devModeOtp || null);
         setResetStep(2);
-        setVerificationSuccessMsg("Security verification code dispatched successfully.");
+        setVerificationSuccessMsg(data.message || "Security verification code dispatched successfully.");
       } else {
         setErrorMsg(data.error || "No client or administrator file matches that email.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErrorMsg("Network latency bounds exceeded. Please try again.");
+      setErrorMsg(`Connection error: ${err.message || "Network latency limits exceeded."}`);
     } finally {
       setLoading(false);
     }
@@ -116,22 +126,29 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
 
     setLoading(true);
     setErrorMsg("");
+    setSuccessBannerMsg("");
     try {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: otpCode })
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Server returned non-JSON representation: ${responseText.slice(0, 150)}`);
+      }
       if (response.ok && data.success) {
         setResetStep(3);
         setVerificationSuccessMsg("OTP verified successfully. Create your new passcode override.");
       } else {
         setErrorMsg(data.error || "Incorrect OTP code. Please trace and retry.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErrorMsg("Verification failure. Check connection.");
+      setErrorMsg(`Verification error: ${err.message || "Check connection."}`);
     } finally {
       setLoading(false);
     }
@@ -143,15 +160,22 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
 
     setLoading(true);
     setErrorMsg("");
+    setSuccessBannerMsg("");
     try {
       const response = await fetch("/api/auth/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword, code: otpCode })
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Server returned non-JSON representation: ${responseText.slice(0, 150)}`);
+      }
       if (response.ok && data.success) {
-        alert("Passcode updated successfully! Sign in with your new password.");
+        setSuccessBannerMsg("Passcode updated successfully! Use your new credentials to sign in.");
         setFormType("signin");
         setResetStep(1);
         setOtpCode("");
@@ -162,9 +186,9 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       } else {
         setErrorMsg(data.error || "Failed resetting passcode.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErrorMsg("Network failure updating passcode.");
+      setErrorMsg(`Reset failed: ${err.message || "Network failure updating passcode."}`);
     } finally {
       setLoading(false);
     }
@@ -191,6 +215,13 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
           <div className="bg-red-950/50 border border-red-900 text-red-300 rounded-xl p-3 text-xs flex items-start gap-2">
             <ShieldAlert size={14} className="mt-0.5 flex-shrink-0" />
             <p>{errorMsg}</p>
+          </div>
+        )}
+
+        {successBannerMsg && (
+          <div className="bg-emerald-950/50 border border-emerald-900 text-emerald-300 rounded-xl p-3 text-xs flex items-start gap-2">
+            <Sparkles size={14} className="mt-0.5 flex-shrink-0 text-emerald-400" />
+            <p>{successBannerMsg}</p>
           </div>
         )}
 
@@ -465,16 +496,49 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
                   </div>
 
                   {devModeOtp && (
-                    <div className="bg-emerald-950/40 border border-emerald-900/60 rounded-xl p-3 text-xs space-y-1">
-                      <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[10px] uppercase tracking-wider">
-                        <Sparkles size={12} className="text-emerald-400 animate-pulse" /> Security OTP Broadcast (Demo Mode)
+                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs space-y-3">
+                      <div className="space-y-1.5 text-left">
+                        <div className="flex items-center gap-1.5 text-indigo-400 font-mono text-[10px] uppercase tracking-wider font-bold">
+                          <ShieldAlert size={12} className="text-indigo-400" /> SMTP Sandbox Mode Active
+                        </div>
+                        <p className="text-slate-400 text-[11px] leading-relaxed">
+                          Your SMTP mail secrets are not configured in your Google AI Studio project settings. Real emails will send once SMTP variables are saved in the secrets panel.
+                        </p>
+                        <p className="text-slate-400 text-[11px] leading-relaxed">
+                          For development ease, the system logged the code to your secure <strong>server terminal log</strong>. You can also securely click below to reveal/hide it during testing.
+                        </p>
                       </div>
-                      <p className="text-slate-300">
-                        Use this generated OTP to complete security step:{" "}
-                        <strong className="text-white text-sm font-mono tracking-widest select-all bg-black/40 px-2 py-0.5 rounded border border-emerald-800/60">
-                          {devModeOtp}
-                        </strong>
-                      </p>
+
+                      <div className="pt-2.5 flex items-center justify-between border-t border-slate-900">
+                        <button
+                          type="button"
+                          onClick={() => setOtpRevealed(!otpRevealed)}
+                          className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 hover:text-white bg-slate-900 hover:bg-slate-850 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors uppercase cursor-pointer"
+                        >
+                          {otpRevealed ? (
+                            <>
+                              <EyeOff size={11} /> Hide Developer OTP
+                            </>
+                          ) : (
+                            <>
+                              <Eye size={11} /> Click to Reveal OTP
+                            </>
+                          )}
+                        </button>
+
+                        <AnimatePresence>
+                          {otpRevealed && (
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              className="font-mono text-sm font-bold tracking-widest text-emerald-400 bg-black/40 px-3 py-1 rounded border border-emerald-950/60"
+                            >
+                              {devModeOtp}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   )}
 

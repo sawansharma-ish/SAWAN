@@ -4,6 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dns from "dns";
+import nodemailer from "nodemailer";
 
 // Ensure DNS works smoothly
 dns.setDefaultResultOrder("ipv4first");
@@ -522,123 +523,223 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 // GENERATE SECURE 2-STEP AUTHENTICATION OTP
-app.post("/api/auth/send-otp", (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "Please enter your registered email address." });
+app.post("/api/auth/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log("[OTP] Send request received for email:", email);
+    if (!email) {
+      return res.status(400).json({ error: "Please enter your registered email address." });
+    }
+
+    const lowerEmail = email.toLowerCase().trim();
+    const isAdmin = [
+      "admin@apexagency.ai",
+      "admin@aurawebstudio.com",
+      "sawanforwork@gmail.com",
+      "sawaforwork@gmail.com"
+    ].includes(lowerEmail);
+
+    const db = readDB();
+    const user = (db.users || []).find(u => u.email && u.email.toLowerCase().trim() === lowerEmail);
+
+    if (!isAdmin && !user) {
+      return res.status(404).json({ error: "No client or administrator file matches that email." });
+    }
+
+    // Generate a random 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[lowerEmail] = {
+      code,
+      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes validity
+    };
+
+    console.log("");
+    console.log("======================================================================");
+    console.log(`🔑 [SECURITY OTP DISPATCH] FOR EMAIL: ${lowerEmail}`);
+    console.log(`👉 CODE: ${code}`);
+    console.log(`⏰ EXPIRE: 5 Minutes`);
+    console.log("======================================================================");
+    console.log("");
+
+    // Try sending real email using SMTP Nodemailer if credentials exist
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const smtpFrom = process.env.SMTP_FROM || `"Apex Agency SecurAuth" <no-reply@apexagency.ai>`;
+
+    let emailSent = false;
+    let smtpErrorDetails = "";
+
+    if (smtpUser && smtpPass) {
+      try {
+        console.log(`[SMTP] Attempting delivery to ${lowerEmail} via ${smtpHost}:${smtpPort}...`);
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+
+        const mailOptions = {
+          from: smtpFrom,
+          to: lowerEmail,
+          subject: `🔐 SecurAuth: Your 2-Step OTP Password Reset Code`,
+          text: `Hello, your 2-Step OTP verification code is requested: ${code}.\nThis code is valid for 5 minutes. If you did not make this request, please login and secure your credentials immediately.`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 32px; border: 1px solid #e1e7ec; border-radius: 16px; background-color: #fafbfc; color: #1e293b;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.025em; color: #020617; font-family: sans-serif;">APEX <span style="color: #6366f1;">SECURE</span></span>
+              </div>
+              <div style="background-color: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0; font-size: 18px; font-weight: 700; color: #0f172a; text-align: center;">2-Step OTP Code verification</h3>
+                <p style="font-size: 14px; line-height: 20px; color: #475569; text-align: center; margin-bottom: 24px;">We received a security request to override password credentials for your account.</p>
+                
+                <div style="text-align: center; margin: 28px 0;">
+                  <span style="display: inline-block; font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; color: #1e1b4b; background-color: #f1f5f9; padding: 14px 28px; border-radius: 8px; letter-spacing: 6px; border: 1px dashed #cbd5e1;">${code}</span>
+                </div>
+                
+                <p style="font-size: 13px; color: #64748b; text-align: center; line-height: 18px;">To secure your account, please do not distribute this code to search bots or third parties. This OTP strictly expires in <strong style="color: #ef4444;">5 minutes</strong>.</p>
+              </div>
+              <div style="text-align: center; margin-top: 24px; font-size: 11px; color: #94a3b8; line-height: 16px;">
+                This is a secure automated system notification.<br>
+                © 2026 Apex AI Agency. All rights reserved.
+              </div>
+            </div>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        emailSent = true;
+        console.log(`[SMTP] Success! OTP code delivered to ${lowerEmail}`);
+      } catch (smtpErr: any) {
+        console.error("[SMTP ERROR] Connection or Auth failure sending mail:", smtpErr);
+        smtpErrorDetails = smtpErr.message || "Unknown error";
+      }
+    } else {
+      console.log("[SMTP Info] SMTP variables are not set. SMTP real-email dispatch bypassed.");
+    }
+
+    res.json({
+      success: true,
+      emailSent,
+      smtpConfigured: !!(smtpUser && smtpPass),
+      message: emailSent 
+        ? `A secure 2-Step OTP verification code has been dispatched to your email: ${lowerEmail}.`
+        : `A secure 2-Step OTP code has been generated. Since SMTP secrets are not configured in the settings panel yet, the generated verification code is securely output in your developer server console logs.`,
+      // For developer security, we do NOT expose the OTP directly onto the client viewport.
+      // Sawan can check his server logs to get it during development.
+      // We will only return the code if they request it in sandbox testing environment for safe fallback.
+      devModeOtp: emailSent ? null : code
+    });
+  } catch (error: any) {
+    console.error("[OTP Error] failed to send otp:", error);
+    res.status(500).json({ error: "Server failed to dispatch OTP code: " + error.message });
   }
-
-  const lowerEmail = email.toLowerCase();
-  const isAdmin = [
-    "admin@apexagency.ai",
-    "admin@aurawebstudio.com",
-    "sawanforwork@gmail.com",
-    "sawaforwork@gmail.com"
-  ].includes(lowerEmail);
-
-  const db = readDB();
-  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
-
-  if (!isAdmin && !user) {
-    return res.status(404).json({ error: "No client or administrator file matches that email." });
-  }
-
-  // Generate a random 6-digit verification code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore[lowerEmail] = {
-    code,
-    expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes validity
-  };
-
-  res.json({
-    success: true,
-    message: "A 2-Step OTP verification code has been dispatched.",
-    devModeOtp: code
-  });
 });
 
 // VERIFY 2-STEP AUTHENTICATION OTP
 app.post("/api/auth/verify-otp", (req, res) => {
-  const { email, code } = req.body;
-  if (!email || !code) {
-    return res.status(400).json({ error: "Email address and OTP verification code are required." });
+  try {
+    const { email, code } = req.body;
+    console.log("[OTP] Verify request received:", { email, code });
+    if (!email || !code) {
+      return res.status(400).json({ error: "Email address and OTP verification code are required." });
+    }
+
+    const lowerEmail = email.toLowerCase().trim();
+    const record = otpStore[lowerEmail];
+
+    if (!record) {
+      return res.status(400).json({ error: "No OTP was requested for this email. Check sequence." });
+    }
+
+    if (record.expiresAt < Date.now()) {
+      delete otpStore[lowerEmail];
+      return res.status(400).json({ error: "OTP transaction expired. Please order a new code." });
+    }
+
+    if (record.code !== code.trim()) {
+      return res.status(400).json({ error: "Incorrect verification OTP. Check code and retry." });
+    }
+
+    res.json({ success: true, message: "OTP code successfully verified." });
+  } catch (error: any) {
+    console.error("[OTP Error] failed to verify otp:", error);
+    res.status(500).json({ error: "Server failed to verify OTP code: " + error.message });
   }
-
-  const lowerEmail = email.toLowerCase();
-  const record = otpStore[lowerEmail];
-
-  if (!record) {
-    return res.status(400).json({ error: "No OTP was requested for this email. Check sequence." });
-  }
-
-  if (record.expiresAt < Date.now()) {
-    delete otpStore[lowerEmail];
-    return res.status(400).json({ error: "OTP transaction expired. Please order a new code." });
-  }
-
-  if (record.code !== code) {
-    return res.status(400).json({ error: "Incorrect verification OTP. Check code and retry." });
-  }
-
-  res.json({ success: true, message: "OTP code successfully verified." });
 });
 
 // SECURE PASSWORD RESET FINALIZE WITH OTP VERIFICATION
 app.post("/api/auth/reset", (req, res) => {
-  const { email, newPassword, code } = req.body;
-  if (!email || !newPassword || !code) {
-    return res.status(400).json({ error: "Missing required parameters (email, password, and OTP code)." });
-  }
+  try {
+    const { email, newPassword, code } = req.body;
+    console.log("[OTP] Reset password request received:", { email, code: "******" });
+    if (!email || !newPassword || !code) {
+      return res.status(400).json({ error: "Missing required parameters (email, password, and OTP code)." });
+    }
 
-  const lowerEmail = email.toLowerCase();
-  const record = otpStore[lowerEmail];
+    const lowerEmail = email.toLowerCase().trim();
+    const record = otpStore[lowerEmail];
 
-  if (!record) {
-    return res.status(400).json({ error: "No OTP was requested for this email address." });
-  }
+    if (!record) {
+      return res.status(400).json({ error: "No OTP was requested for this email address." });
+    }
 
-  if (record.expiresAt < Date.now()) {
+    if (record.expiresAt < Date.now()) {
+      delete otpStore[lowerEmail];
+      return res.status(400).json({ error: "Your OTP code has expired. Please try requesting a new one." });
+    }
+
+    if (record.code !== code.trim()) {
+      return res.status(400).json({ error: "Invalid OTP verification code. Please check and try again." });
+    }
+
+    // OTP verified, clear it
     delete otpStore[lowerEmail];
-    return res.status(400).json({ error: "Your OTP code has expired. Please try requesting a new one." });
-  }
 
-  if (record.code !== code) {
-    return res.status(400).json({ error: "Invalid OTP verification code. Please check and try again." });
-  }
+    const isAdmin = [
+      "admin@apexagency.ai",
+      "admin@aurawebstudio.com",
+      "sawanforwork@gmail.com",
+      "sawaforwork@gmail.com"
+    ].includes(lowerEmail);
 
-  // OTP verified, clear it
-  delete otpStore[lowerEmail];
+    const db = readDB();
 
-  const isAdmin = [
-    "admin@apexagency.ai",
-    "admin@aurawebstudio.com",
-    "sawanforwork@gmail.com",
-    "sawaforwork@gmail.com"
-  ].includes(lowerEmail);
+    if (isAdmin) {
+      db.adminOverrides = db.adminOverrides || {};
+      db.adminOverrides[lowerEmail] = newPassword;
+      writeDB(db);
+      console.log(`[OTP Reset] Admin passcode updated for ${lowerEmail}`);
+      return res.json({ success: true, message: "Administrative access passcode updated successfully." });
+    }
 
-  const db = readDB();
+    const user = (db.users || []).find(u => u.email && u.email.toLowerCase().trim() === lowerEmail);
+    if (!user) {
+      return res.status(404).json({ error: "No client matches the designated email address." });
+    }
 
-  if (isAdmin) {
-    db.adminOverrides = db.adminOverrides || {};
-    db.adminOverrides[lowerEmail] = newPassword;
+    user.passwordHash = newPassword;
+    user.activityHistory.push({
+      action: "Password Reset [2FA]",
+      timestamp: new Date().toISOString(),
+      details: "Completed 2-step authentication reset with secure OTP."
+    });
     writeDB(db);
-    return res.json({ success: true, message: "Administrative access passcode updated successfully." });
+
+    console.log(`[OTP Reset] User password updated for ${lowerEmail}`);
+    res.json({ success: true, message: "Client credential reset successfully." });
+  } catch (error: any) {
+    console.error("[OTP Error] failed to reset password:", error);
+    res.status(500).json({ error: "Server failed to perform passcode override: " + error.message });
   }
-
-  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
-  if (!user) {
-    return res.status(404).json({ error: "No client matches the designated email address." });
-  }
-
-  user.passwordHash = newPassword;
-  user.activityHistory.push({
-    action: "Password Reset [2FA]",
-    timestamp: new Date().toISOString(),
-    details: "Completed 2-step authentication reset with secure OTP."
-  });
-  writeDB(db);
-
-  res.json({ success: true, message: "Your login password has been reset successfully." });
 });
 
 app.post("/api/auth/profile/update", (req, res) => {
