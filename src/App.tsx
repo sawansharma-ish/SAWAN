@@ -18,7 +18,15 @@ import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("home");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // Parse path on initial load for SEO-perfect deep linking
+    const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
+    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
+    if (validPages.includes(path)) {
+      return path;
+    }
+    return "home";
+  });
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -49,6 +57,29 @@ export default function App() {
   // Auto-scroll to top when page updates
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
+
+  // Synchronize state with incoming path changes via browser history buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
+      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
+      if (path && validPages.includes(path)) {
+        setCurrentPage(path);
+      } else {
+        setCurrentPage("home");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Push path changes back to the browser's URL address bar seamlessly
+  useEffect(() => {
+    const targetPath = currentPage === "home" ? "/" : `/${currentPage}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ page: currentPage }, "", targetPath);
+    }
   }, [currentPage]);
 
   // Hidden admin access from query parameters or hash tag routing

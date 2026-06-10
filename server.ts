@@ -1344,47 +1344,50 @@ app.post("/api/admin/projects/update", (req, res) => {
 // SEO UTILS: SITEMAP & ROBOTS XML / TXT FOR PREMIUM CRO DOMINANCE
 app.get("/sitemap.xml", (req, res) => {
   res.header("Content-Type", "application/xml");
+  const host = req.get("host") || "auraweb.in";
+  const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  const baseUrl = `${protocol}://${host}`;
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://apexagency.ai/</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/services</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/services</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/portfolio</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/portfolio</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/pricing</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/pricing</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/about</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/about</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/blog</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/blog</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://apexagency.ai/contact</loc>
-    <lastmod>2026-06-07</lastmod>
+    <loc>${baseUrl}/contact</loc>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1394,12 +1397,15 @@ app.get("/sitemap.xml", (req, res) => {
 
 app.get("/robots.txt", (req, res) => {
   res.header("Content-Type", "text/plain");
+  const host = req.get("host") || "auraweb.in";
+  const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  const baseUrl = `${protocol}://${host}`;
   const robots = `User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/*
 
-Sitemap: https://apexagency.ai/sitemap.xml`;
+Sitemap: ${baseUrl}/sitemap.xml`;
   res.send(robots);
 });
 

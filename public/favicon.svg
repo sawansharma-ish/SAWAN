@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <circle cx="256" cy="256" r="240" fill="#ffffff" stroke="#cbd5e1" stroke-width="16" />
+  <text x="125" y="330" font-family="system-ui, -apple-system, sans-serif" font-weight="950" font-size="200" fill="#0f172a" letter-spacing="-5">A</text>
+  <text x="260" y="330" font-family="system-ui, -apple-system, sans-serif" font-weight="950" font-size="200" fill="#dc2626" letter-spacing="-5">W</text>
+</svg>
