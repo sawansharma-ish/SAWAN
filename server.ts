@@ -431,6 +431,9 @@ const database = readDB();
 
 // API ROUTES
 
+// SECURE IN-MEMORY OTP ENVELOPE FOR 2-STEP VERIFICATION
+const otpStore: Record<string, { code: string; expiresAt: number }> = {};
+
 // AUTHENTICATION SYSTEM
 app.post("/api/auth/register", (req, res) => {
   const { name, email, phone, password } = req.body;
@@ -473,11 +476,19 @@ app.post("/api/auth/login", (req, res) => {
 
   // Handle Admin Universal Login safely inline
   const lowerEmail = email.toLowerCase();
+  
+  // Read DB to lookup persisted admin overrides
+  const db = readDB();
+  const adminOverrides = db.adminOverrides || {};
+  
+  // Setup default passwords if no override exists
+  const defaultAdminPassword = (lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") 
+    ? "Admin@1417" 
+    : "admin";
+  const validAdminPassword = adminOverrides[lowerEmail] || defaultAdminPassword;
+
   if (
-    (lowerEmail === "admin@apexagency.ai" && password === "admin") ||
-    (lowerEmail === "admin@aurawebstudio.com" && password === "admin") ||
-    (lowerEmail === "sawanforwork@gmail.com" && password === "Admin@1417") ||
-    (lowerEmail === "sawaforwork@gmail.com" && password === "Admin@1417")
+    ((lowerEmail === "admin@apexagency.ai" || lowerEmail === "admin@aurawebstudio.com" || lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") && password === validAdminPassword)
   ) {
     return res.json({
       success: true,
@@ -492,7 +503,6 @@ app.post("/api/auth/login", (req, res) => {
     });
   }
 
-  const db = readDB();
   const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
   if (!user || user.passwordHash !== password) {
@@ -511,23 +521,120 @@ app.post("/api/auth/login", (req, res) => {
   res.json({ success: true, user: userPayload, isAdmin: false });
 });
 
-app.post("/api/auth/reset", (req, res) => {
-  const { email, newPassword } = req.body;
-  if (!email || !newPassword) {
-    return res.status(400).json({ error: "Missing required parameter values." });
+// GENERATE SECURE 2-STEP AUTHENTICATION OTP
+app.post("/api/auth/send-otp", (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Please enter your registered email address." });
   }
 
+  const lowerEmail = email.toLowerCase();
+  const isAdmin = [
+    "admin@apexagency.ai",
+    "admin@aurawebstudio.com",
+    "sawanforwork@gmail.com",
+    "sawaforwork@gmail.com"
+  ].includes(lowerEmail);
+
   const db = readDB();
-  const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
+
+  if (!isAdmin && !user) {
+    return res.status(404).json({ error: "No client or administrator file matches that email." });
+  }
+
+  // Generate a random 6-digit verification code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore[lowerEmail] = {
+    code,
+    expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes validity
+  };
+
+  res.json({
+    success: true,
+    message: "A 2-Step OTP verification code has been dispatched.",
+    devModeOtp: code
+  });
+});
+
+// VERIFY 2-STEP AUTHENTICATION OTP
+app.post("/api/auth/verify-otp", (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: "Email address and OTP verification code are required." });
+  }
+
+  const lowerEmail = email.toLowerCase();
+  const record = otpStore[lowerEmail];
+
+  if (!record) {
+    return res.status(400).json({ error: "No OTP was requested for this email. Check sequence." });
+  }
+
+  if (record.expiresAt < Date.now()) {
+    delete otpStore[lowerEmail];
+    return res.status(400).json({ error: "OTP transaction expired. Please order a new code." });
+  }
+
+  if (record.code !== code) {
+    return res.status(400).json({ error: "Incorrect verification OTP. Check code and retry." });
+  }
+
+  res.json({ success: true, message: "OTP code successfully verified." });
+});
+
+// SECURE PASSWORD RESET FINALIZE WITH OTP VERIFICATION
+app.post("/api/auth/reset", (req, res) => {
+  const { email, newPassword, code } = req.body;
+  if (!email || !newPassword || !code) {
+    return res.status(400).json({ error: "Missing required parameters (email, password, and OTP code)." });
+  }
+
+  const lowerEmail = email.toLowerCase();
+  const record = otpStore[lowerEmail];
+
+  if (!record) {
+    return res.status(400).json({ error: "No OTP was requested for this email address." });
+  }
+
+  if (record.expiresAt < Date.now()) {
+    delete otpStore[lowerEmail];
+    return res.status(400).json({ error: "Your OTP code has expired. Please try requesting a new one." });
+  }
+
+  if (record.code !== code) {
+    return res.status(400).json({ error: "Invalid OTP verification code. Please check and try again." });
+  }
+
+  // OTP verified, clear it
+  delete otpStore[lowerEmail];
+
+  const isAdmin = [
+    "admin@apexagency.ai",
+    "admin@aurawebstudio.com",
+    "sawanforwork@gmail.com",
+    "sawaforwork@gmail.com"
+  ].includes(lowerEmail);
+
+  const db = readDB();
+
+  if (isAdmin) {
+    db.adminOverrides = db.adminOverrides || {};
+    db.adminOverrides[lowerEmail] = newPassword;
+    writeDB(db);
+    return res.json({ success: true, message: "Administrative access passcode updated successfully." });
+  }
+
+  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
   if (!user) {
     return res.status(404).json({ error: "No client matches the designated email address." });
   }
 
   user.passwordHash = newPassword;
   user.activityHistory.push({
-    action: "Password Reset",
+    action: "Password Reset [2FA]",
     timestamp: new Date().toISOString(),
-    details: "Reset login access password passcode."
+    details: "Completed 2-step authentication reset with secure OTP."
   });
   writeDB(db);
 

@@ -7,31 +7,15 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"metrics" | "leads" | "contacts" | "projects" | "blogs" | "telemetry">("metrics");
+  const [activeTab, setActiveTab] = useState<"metrics" | "leads" | "projects" | "blogs" | "telemetry">("metrics");
   const [loading, setLoading] = useState(true);
 
   // Administrative States
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
-  const [inquiries, setInquiries] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [blogs, setBlogs] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-
-  const formatDateTime = (timestamp: string) => {
-    try {
-      return new Date(timestamp).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
-    } catch {
-      return timestamp;
-    }
-  };
 
   // Blog Editor states
   const [editingBlog, setEditingBlog] = useState<any | null>(null);
@@ -50,7 +34,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const fetchAdminDatasets = async () => {
     setLoading(true);
     let loadedLeads: any[] = [];
-    let loadedInquiries: any[] = [];
     let loadedProjects: any[] = [];
     let loadedBlogs: any[] = [];
     let loadedAnalytics: any[] = [];
@@ -74,7 +57,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         isLocalBackup: true
       }));
       loadedLeads = [...savedLocalLeads, ...inquiriesAsLeads];
-      loadedInquiries = savedLocalInquiries;
     } catch (e) {
       console.warn("Could not read local backup leads/inquiries:", e);
     }
@@ -99,25 +81,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       loadedLeads.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setLeads(loadedLeads);
 
-      // 2. Fetch enquiries
-      try {
-        const contactsRes = await fetch("/api/admin/contacts", {
-          method: "GET",
-          headers: getAuthHeaders()
-        });
-        const contactsData = await contactsRes.json();
-        if (contactsData.inquiries) {
-          const apiInquiryIds = new Set(contactsData.inquiries.map((i: any) => i.id));
-          const filteredLocalContacts = loadedInquiries.filter((i) => !apiInquiryIds.has(i.id));
-          loadedInquiries = [...filteredLocalContacts, ...contactsData.inquiries];
-        }
-      } catch (err) {
-        console.warn("Could not fetch database enquiries from API, using client local backups:", err);
-      }
-      loadedInquiries.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setInquiries(loadedInquiries);
-
-      // 3. Fetch projects
+      // 2. Fetch projects
       try {
         const projRes = await fetch("/api/admin/projects");
         const projData = await projRes.json();
@@ -192,36 +156,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     } catch (err) {
       console.error(err);
       setLeads(leads.filter((l) => l.id !== id));
-    }
-  };
-
-  const handleDeleteInquiry = async (id: string) => {
-    if (!confirm("Delete this inquiry from inquiry records?")) return;
-
-    const isLocalInquiry = id.startsWith("inq-local-") || id.startsWith("fallback-");
-    if (isLocalInquiry) {
-      try {
-        const localInquiries = JSON.parse(localStorage.getItem("aura_local_inquiries") || "[]");
-        const filtered = localInquiries.filter((inq: any) => inq.id !== id);
-        localStorage.setItem("aura_local_inquiries", JSON.stringify(filtered));
-        setInquiries(inquiries.filter((inq) => inq.id !== id));
-        return;
-      } catch (err) {
-        console.error("Error deleting local backup inquiry:", err);
-      }
-    }
-
-    try {
-      const res = await fetch("/api/admin/contacts/delete", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ id })
-      });
-      if (res.ok) {
-        setInquiries(inquiries.filter((inq) => inq.id !== id));
-      }
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -319,7 +253,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const totalPageViews = analytics.length;
-  const totalInquiries = inquiries.length;
   const uniqueIpMap = new Set(analytics.map((a) => a.ip));
   const uniqueVisitors = uniqueIpMap.size;
 
@@ -367,7 +300,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {[
             { id: "metrics", label: "Overview Metrics", icon: <BarChart3 size={14} /> },
             { id: "leads", label: `Leads Vault (${leads.length})`, icon: <Clipboard size={14} /> },
-            { id: "contacts", label: `Enquiries (${inquiries.length})`, icon: <MessageSquare size={14} /> },
             { id: "projects", label: `Clients Progress (${projects.length})`, icon: <Users size={14} /> },
             { id: "blogs", label: `Insights Editor (${blogs.length})`, icon: <FileText size={14} /> },
             { id: "telemetry", label: `Uptime Telemetry (${analytics.length})`, icon: <ShieldAlert size={14} /> }
@@ -426,12 +358,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
 
                     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                      <span className="text-[10px] text-slate-400 font-mono block">TOTAL INBOUND ENQUIRIES</span>
-                      <span className="text-3xl font-extrabold text-slate-950 block mt-1">{totalInquiries}</span>
-                      <p className="text-[10px] text-slate-400 font-mono block mt-1">Includes local and server-side captures</p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                       <span className="text-[10px] text-slate-400 font-mono block">UNIQUE IP VISITORS CONSTRAINTS</span>
                       <span className="text-3xl font-extrabold text-slate-950 block mt-1">{uniqueVisitors}</span>
                       <p className="text-[10px] text-slate-400 font-mono block mt-1">Geographic coordinates logs</p>
@@ -470,7 +396,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             <th className="py-3 px-4">Business Details</th>
                             <th className="py-3 px-4">Service & Budget</th>
                             <th className="py-3 px-4">Captured Message</th>
-                            <th className="py-3 px-4">Received At</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                           </tr>
                         </thead>
@@ -491,9 +416,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               <td className="py-3.5 px-4 max-w-[200px] truncate">
                                 <p className="truncate text-slate-500 whitespace-pre-wrap">{l.message || "No spec notes."}</p>
                               </td>
-                              <td className="py-3.5 px-4 text-[10px] text-slate-500 font-mono">
-                                {formatDateTime(l.timestamp)}
-                              </td>
                               <td className="py-3.5 px-4 text-right">
                                 <button
                                   id={`delete-lead-${l.id}`}
@@ -511,63 +433,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 text-center py-10">No leads registered matching coordinates.</p>
-                  )}
-                </motion.div>
-              )}
-              {activeTab === "contacts" && (
-                <motion.div
-                  key="contacts"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4"
-                >
-                  <h3 className="font-display font-extrabold text-lg text-slate-950">Inbound Enquiries & Messages</h3>
-                  <p className="text-xs text-slate-400">Direct site contact submissions with timestamp and reply status.</p>
-
-                  {inquiries.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-100 text-slate-400 font-mono text-[10px] uppercase">
-                            <th className="py-3 px-4">Name / Email</th>
-                            <th className="py-3 px-4">Phone</th>
-                            <th className="py-3 px-4">Message</th>
-                            <th className="py-3 px-4">Received</th>
-                            <th className="py-3 px-4">Reply Status</th>
-                            <th className="py-3 px-4 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50 font-medium text-slate-700">
-                          {inquiries.map((inq) => (
-                            <tr key={inq.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="py-3.5 px-4">
-                                <p className="font-bold text-slate-950">{inq.name}</p>
-                                <span className="text-[10px] text-slate-400 block font-mono">{inq.email}</span>
-                              </td>
-                              <td className="py-3.5 px-4 text-slate-700">{inq.phone || "Not provided"}</td>
-                              <td className="py-3.5 px-4 max-w-[220px] truncate">
-                                <p className="truncate text-slate-500 whitespace-pre-wrap">{inq.message}</p>
-                              </td>
-                              <td className="py-3.5 px-4 text-[10px] text-slate-500 font-mono">{formatDateTime(inq.timestamp)}</td>
-                              <td className="py-3.5 px-4 text-[10px] text-slate-700 uppercase tracking-wider">{inq.replied ? "Replied" : "Pending"}</td>
-                              <td className="py-3.5 px-4 text-right">
-                                <button
-                                  id={`delete-inquiry-${inq.id}`}
-                                  onClick={() => handleDeleteInquiry(inq.id)}
-                                  className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Remove Inquiry"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 text-center py-10">No enquiries have been captured yet.</p>
                   )}
                 </motion.div>
               )}
@@ -836,12 +701,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           {analytics.map((log) => (
                             <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="py-2 px-3 font-semibold text-slate-900">{log.ip}</td>
-                              <td className="py-2 px-3 text-violet-600">{log.landingPage || log.path}</td>
-                              <td className="py-2 px-3">
-                                <div className="font-semibold text-slate-900">{log.browser}</div>
-                                <div className="text-[10px] text-slate-500">{log.deviceType} • {log.city}, {log.country}</div>
-                              </td>
-                              <td className="py-2 px-3 text-slate-400">{formatDateTime(log.timestamp)}</td>
+                              <td className="py-2 px-3 text-violet-600">{log.path}</td>
+                              <td className="py-2 px-3 truncate max-w-[200px]">{log.userAgent}</td>
+                              <td className="py-2 px-3 text-slate-400">{new Date(log.timestamp).toLocaleTimeString()}</td>
                             </tr>
                           ))}
                         </tbody>
