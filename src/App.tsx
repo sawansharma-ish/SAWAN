@@ -15,13 +15,12 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => {
     // Parse path on initial load for SEO-perfect deep linking
     const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
+    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard"];
     if (validPages.includes(path)) {
       return path;
     }
@@ -63,7 +62,7 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
+      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard"];
       if (path && validPages.includes(path)) {
         setCurrentPage(path);
       } else {
@@ -156,10 +155,6 @@ export default function App() {
             user={user}
             onUpdateProfile={handleUpdateProfile}
           />
-        )}
-        
-        {currentPage === "admin" && isAdmin && (
-          <AdminDashboard onLogout={handleLogout} />
         )}
       </main>
 

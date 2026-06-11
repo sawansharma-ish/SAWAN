@@ -34,18 +34,8 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
           
           {/* Top Line: Brand Centered, with Side CTA/Auth Buttons */}
           <div className="w-full flex items-center justify-between relative h-10">
-            {/* Left Hand: Optional Admin Panel Access */}
+            {/* Left Hand: Space container */}
             <div className="w-[240px] flex items-center">
-              {isAdmin && (
-                <button
-                  id="navbar-admin-dash"
-                  onClick={() => setCurrentPage("admin")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-black text-[#FFFDF2] border border-black hover:bg-neutral-900 transition-colors"
-                >
-                  <ShieldCheck size={14} />
-                  Admin Panel
-                </button>
-              )}
             </div>
 
             {/* Brand Logo - PERFECTLY CENTERED */}
@@ -80,16 +70,6 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                     <LogOut size={13} />
                   </button>
                 </div>
-              )}
-
-              {!user && (
-                <button
-                  id="nav-admin-login-btn"
-                  onClick={() => setCurrentPage("login")}
-                  className="px-4 py-2 border border-black/20 hover:border-black hover:bg-black/5 text-black font-semibold rounded-xl text-xs transition-colors"
-                >
-                  Admin Login
-                </button>
               )}
 
               <button
@@ -130,15 +110,6 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
           </div>
 
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <button
-                id="nav-mobile-admin-badge"
-                onClick={() => setCurrentPage("admin")}
-                className="p-1.5 rounded-lg text-violet-700 bg-violet-100"
-              >
-                <ShieldCheck size={16} />
-              </button>
-            )}
             <button
               id="mobile-menu-trigger"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -204,19 +175,6 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                   Client Portal Dashboard
                 </button>
               </div>
-            )}
-
-            {!user && (
-              <button
-                id="nav-mob-admin-login-btn"
-                onClick={() => {
-                  setCurrentPage("login");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full py-3 text-center border border-black/20 text-black hover:bg-black/5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors"
-              >
-                Admin Login
-              </button>
             )}
 
             <button

@@ -163,7 +163,6 @@ interface DB {
   blogs: Blog[];
   portfolio: PortfolioItem[];
   analytics: VisitorLog[];
-  adminOverrides?: Record<string, string>;
 }
 
 // Default Data Seed
@@ -499,35 +498,7 @@ app.post("/api/auth/login", (req, res) => {
     return res.status(400).json({ error: "Please enter your email and secure password." });
   }
 
-  // Handle Admin Universal Login safely inline
-  const lowerEmail = email.toLowerCase();
-  
-  // Read DB to lookup persisted admin overrides
   const db = readDB();
-  const adminOverrides = db.adminOverrides || {};
-  
-  // Setup default passwords if no override exists
-  const defaultAdminPassword = (lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") 
-    ? "Admin@1417" 
-    : "admin";
-  const validAdminPassword = adminOverrides[lowerEmail] || defaultAdminPassword;
-
-  if (
-    ((lowerEmail === "admin@apexagency.ai" || lowerEmail === "admin@aurawebstudio.com" || lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") && password === validAdminPassword)
-  ) {
-    return res.json({
-      success: true,
-      isAdmin: true,
-      user: {
-        id: "admin-root",
-        name: (lowerEmail === "sawanforwork@gmail.com" || lowerEmail === "sawaforwork@gmail.com") ? "Sawan Sharma [Admin]" : "Apex AI Architect",
-        email: lowerEmail,
-        role: "admin",
-        lastLogin: new Date().toISOString()
-      }
-    });
-  }
-
   const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
   if (!user || user.passwordHash !== password) {
@@ -556,18 +527,11 @@ app.post("/api/auth/send-otp", async (req, res) => {
     }
 
     const lowerEmail = email.toLowerCase().trim();
-    const isAdmin = [
-      "admin@apexagency.ai",
-      "admin@aurawebstudio.com",
-      "sawanforwork@gmail.com",
-      "sawaforwork@gmail.com"
-    ].includes(lowerEmail);
-
     const db = readDB();
     const user = (db.users || []).find(u => u.email && u.email.toLowerCase().trim() === lowerEmail);
 
-    if (!isAdmin && !user) {
-      return res.status(404).json({ error: "No client or administrator file matches that email." });
+    if (!user) {
+      return res.status(404).json({ error: "No client file matches that email." });
     }
 
     // Generate a random 6-digit verification code
@@ -728,23 +692,7 @@ app.post("/api/auth/reset", (req, res) => {
     // OTP verified, clear it
     delete otpStore[lowerEmail];
 
-    const isAdmin = [
-      "admin@apexagency.ai",
-      "admin@aurawebstudio.com",
-      "sawanforwork@gmail.com",
-      "sawaforwork@gmail.com"
-    ].includes(lowerEmail);
-
     const db = readDB();
-
-    if (isAdmin) {
-      db.adminOverrides = db.adminOverrides || {};
-      db.adminOverrides[lowerEmail] = newPassword;
-      writeDB(db);
-      console.log(`[OTP Reset] Admin passcode updated for ${lowerEmail}`);
-      return res.json({ success: true, message: "Administrative access passcode updated successfully." });
-    }
-
     const user = (db.users || []).find(u => u.email && u.email.toLowerCase().trim() === lowerEmail);
     if (!user) {
       return res.status(404).json({ error: "No client matches the designated email address." });
@@ -1129,246 +1077,7 @@ app.post("/api/analytics/track", (req, res) => {
 
 
 // ====== ADMINISTRATOR PROTECTED MANAGEMENT CONTROLS ======
-
-// STATS OVERVIEW
-app.get("/api/admin/stats", (req, res) => {
-  const db = readDB();
-  
-  const totalVisitors = db.analytics.length;
-  const totalLeads = db.leads.length;
-  const totalUsers = db.users.length;
-  const totalInquiries = db.inquiries.length;
-  
-  // Calculations
-  const leadsConversionRate = totalVisitors > 0 ? ((totalLeads / totalVisitors) * 100).toFixed(1) : "0.0";
-  
-  res.json({
-    totalVisitors,
-    totalLeads,
-    totalUsers,
-    totalInquiries,
-    conversionRate: `${leadsConversionRate}%`,
-    recentAnalytics: db.analytics.slice(-30).reverse(),
-    recentLeads: db.leads.slice(-10).reverse(),
-    recentInquiries: db.inquiries.slice(-10).reverse(),
-    recentUsers: db.users.slice(-10).reverse()
-  });
-});
-
-// LEAD DB CONTROLS
-app.get("/api/admin/leads", (req, res) => {
-  const db = readDB();
-  res.json({ leads: db.leads });
-});
-
-app.post("/api/admin/leads/update-status", (req, res) => {
-  const { id, status } = req.body;
-  const db = readDB();
-  const lead = db.leads.find(l => l.id === id);
-  if (lead) {
-    lead.status = status;
-    writeDB(db);
-    return res.json({ success: true, lead });
-  }
-  res.status(404).json({ error: "Lead identity not recovered." });
-});
-
-app.post("/api/admin/leads/delete", (req, res) => {
-  const { id } = req.body;
-  const db = readDB();
-  db.leads = db.leads.filter(l => l.id !== id);
-  writeDB(db);
-  res.json({ success: true, message: "Lead index wiped from system catalogs." });
-});
-
-
-// USER DB CONTROLS
-app.get("/api/admin/users", (req, res) => {
-  const db = readDB();
-  res.json({ users: db.users });
-});
-
-app.post("/api/admin/users/delete", (req, res) => {
-  const { id } = req.body;
-  const db = readDB();
-  db.users = db.users.filter(u => u.id !== id);
-  // also clean up projects associated with user for integrity
-  db.projects = db.projects.filter(p => p.userId !== id);
-  writeDB(db);
-  res.json({ success: true });
-});
-
-
-// PORTFOLIO DB CONTROLS
-app.post("/api/admin/portfolio/add", (req, res) => {
-  const { title, category, client, duration, beforeImage, afterImage, challenge, solution, results, websiteUrl, image } = req.body;
-  if (!title || !category || !client || !challenge || !solution) {
-    return res.status(400).json({ error: "Required fields are missing." });
-  }
-
-  const db = readDB();
-  const newItem: PortfolioItem = {
-    id: "port-" + Math.random().toString(36).substr(2, 9),
-    title,
-    category,
-    client,
-    duration: duration || "3 Weeks",
-    image: image || "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
-    beforeImage,
-    afterImage,
-    challenge,
-    solution,
-    results: Array.isArray(results) ? results : [results || "Converted successfully"],
-    websiteUrl
-  };
-
-  db.portfolio.push(newItem);
-  writeDB(db);
-  res.status(201).json({ success: true, item: newItem });
-});
-
-app.post("/api/admin/portfolio/edit", (req, res) => {
-  const { id, title, category, client, duration, beforeImage, afterImage, challenge, solution, results, websiteUrl, image } = req.body;
-  const db = readDB();
-  const item = db.portfolio.find(p => p.id === id);
-  if (item) {
-    if (title) item.title = title;
-    if (category) item.category = category;
-    if (client) item.client = client;
-    if (duration) item.duration = duration;
-    if (beforeImage) item.beforeImage = beforeImage;
-    if (afterImage) item.afterImage = afterImage;
-    if (challenge) item.challenge = challenge;
-    if (solution) item.solution = solution;
-    if (image) item.image = image;
-    if (results) item.results = Array.isArray(results) ? results : [results];
-    if (websiteUrl) item.websiteUrl = websiteUrl;
-
-    writeDB(db);
-    return res.json({ success: true, item });
-  }
-  res.status(404).json({ error: "Item not located." });
-});
-
-app.post("/api/admin/portfolio/delete", (req, res) => {
-  const { id } = req.body;
-  const db = readDB();
-  db.portfolio = db.portfolio.filter(p => p.id !== id);
-  writeDB(db);
-  res.json({ success: true });
-});
-
-
-// BLOG DB CONTROLS
-app.post("/api/admin/blogs/add", (req, res) => {
-  const { title, excerpt, content, category, author, image, readTime } = req.body;
-  if (!title || !content || !excerpt || !category) {
-    return res.status(400).json({ error: "Required blog parameters are absent." });
-  }
-
-  const db = readDB();
-  const newBlog: Blog = {
-    id: "blog-" + Math.random().toString(36).substr(2, 9),
-    title,
-    slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-    excerpt,
-    content,
-    category,
-    publishedDate: new Date().toISOString().split("T")[0],
-    readTime: readTime || "4 Min Read",
-    image: image || "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
-    author: author || "Apex AI Team"
-  };
-
-  db.blogs.push(newBlog);
-  writeDB(db);
-  res.status(201).json({ success: true, blog: newBlog });
-});
-
-app.post("/api/admin/blogs/edit", (req, res) => {
-  const { id, title, excerpt, content, category, author, image } = req.body;
-  const db = readDB();
-  const blog = db.blogs.find(b => b.id === id);
-  if (blog) {
-    if (title) {
-      blog.title = title;
-      blog.slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    }
-    if (excerpt) blog.excerpt = excerpt;
-    if (content) blog.content = content;
-    if (category) blog.category = category;
-    if (author) blog.author = author;
-    if (image) blog.image = image;
-
-    writeDB(db);
-    return res.json({ success: true, blog });
-  }
-  res.status(404).json({ error: "Blog post not identified." });
-});
-
-app.post("/api/admin/blogs/delete", (req, res) => {
-  const { id } = req.body;
-  const db = readDB();
-  db.blogs = db.blogs.filter(b => b.id !== id);
-  writeDB(db);
-  res.json({ success: true });
-});
-
-
-// INQUIRY CONTROLS
-app.get("/api/admin/contacts", (req, res) => {
-  const db = readDB();
-  res.json({ inquiries: db.inquiries });
-});
-
-app.post("/api/admin/contacts/reply", (req, res) => {
-  const { id, replyText } = req.body;
-  const db = readDB();
-  const contact = db.inquiries.find(c => c.id === id);
-  if (contact) {
-    contact.replied = true;
-    contact.replyText = replyText || "Thank you for contacting Apex AI Agency. A representative will connect shortly.";
-    writeDB(db);
-    return res.json({ success: true, contact });
-  }
-  res.status(404).json({ error: "Inquiry index not found." });
-});
-
-app.post("/api/admin/contacts/delete", (req, res) => {
-  const { id } = req.body;
-  const db = readDB();
-  db.inquiries = db.inquiries.filter(i => i.id !== id);
-  writeDB(db);
-  res.json({ success: true });
-});
-
-
-// PROJECT ADMIN CONTROLS
-app.get("/api/admin/projects", (req, res) => {
-  const db = readDB();
-  res.json({ projects: db.projects });
-});
-
-app.post("/api/admin/projects/update", (req, res) => {
-  const { id, progress, status, adminNotes } = req.body;
-  const db = readDB();
-  const proj = db.projects.find(p => p.id === id);
-  if (proj) {
-    if (progress !== undefined) proj.progress = Number(progress);
-    if (status) proj.status = status;
-    if (adminNotes !== undefined) proj.adminNotes = adminNotes;
-
-    proj.messages.push({
-      sender: "admin",
-      text: `Status Update: Progress is now ${proj.progress}%. Milestone status changed to: '${proj.status}'.`,
-      timestamp: new Date().toISOString()
-    });
-
-    writeDB(db);
-    return res.json({ success: true, project: proj });
-  }
-  res.status(404).json({ error: "Project system item was not recognized." });
-});
+// DECOMMISSIONED: All administrative controllers and endpoints have been completely cleared.
 
 
 // SEO UTILS: SITEMAP & ROBOTS XML / TXT FOR PREMIUM CRO DOMINANCE
@@ -1432,7 +1141,6 @@ app.get("/robots.txt", (req, res) => {
   const baseUrl = `${protocol}://${host}`;
   const robots = `User-agent: *
 Allow: /
-Disallow: /admin
 Disallow: /api/*
 
 Sitemap: ${baseUrl}/sitemap.xml`;
