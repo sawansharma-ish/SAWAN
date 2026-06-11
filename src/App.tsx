@@ -15,12 +15,13 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => {
     // Parse path on initial load for SEO-perfect deep linking
     const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard"];
+    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
     if (validPages.includes(path)) {
       return path;
     }
@@ -62,7 +63,7 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard"];
+      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin"];
       if (path && validPages.includes(path)) {
         setCurrentPage(path);
       } else {
@@ -154,6 +155,13 @@ export default function App() {
           <ClientDashboard
             user={user}
             onUpdateProfile={handleUpdateProfile}
+          />
+        )}
+
+        {currentPage === "admin" && (
+          <AdminDashboard
+            user={user}
+            onLogout={handleLogout}
           />
         )}
       </main>

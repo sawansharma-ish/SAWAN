@@ -48,7 +48,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
 
             {/* Right Hand: Auth or Client Portal Status + CTA CTA */}
             <div className="w-[380px] flex items-center justify-end gap-3">
-              {user && (
+              {user ? (
                 <div className="flex items-center gap-2.5 bg-[#FFFDF2] px-3 py-1.5 rounded-xl border border-black/10">
                   <span className="text-xs font-semibold text-black flex items-center gap-1">
                     <User size={13} className="text-black" />
@@ -56,10 +56,10 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                   </span>
                   <button
                     id="navbar-dash-link"
-                    onClick={() => setCurrentPage("dashboard")}
+                    onClick={() => setCurrentPage(isAdmin ? "admin" : "dashboard")}
                     className="px-2.5 py-1 bg-black hover:bg-neutral-900 text-[#FFFDF2] text-[11px] font-medium rounded-lg transition-all"
                   >
-                    Portal
+                    {isAdmin ? "Admin Console" : "Portal"}
                   </button>
                   <button
                     id="navbar-logout-btn"
@@ -70,6 +70,15 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                     <LogOut size={13} />
                   </button>
                 </div>
+              ) : (
+                <button
+                  id="navbar-login-btn"
+                  onClick={() => setCurrentPage("login")}
+                  className="px-3 py-1.5 hover:bg-black/5 text-neutral-800 transition-all rounded-xl text-xs font-semibold uppercase tracking-wider border border-black/10 flex items-center gap-1 cursor-pointer"
+                >
+                  <LogIn size={13} />
+                  Login
+                </button>
               )}
 
               <button
@@ -146,7 +155,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
           <hr className="border-black/10" />
 
           <div className="flex flex-col gap-3">
-            {user && (
+            {user ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-[#FFFDF2] rounded-xl border border-black/10">
                   <span className="text-sm font-semibold text-black flex items-center gap-1.5">
@@ -167,14 +176,25 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                 <button
                   id="nav-mob-dash-link"
                   onClick={() => {
-                    setCurrentPage("dashboard");
+                    setCurrentPage(isAdmin ? "admin" : "dashboard");
                     setMobileMenuOpen(false);
                   }}
                   className="w-full text-center py-2.5 bg-black text-[#FFFDF2] rounded-xl text-xs font-bold uppercase tracking-wider"
                 >
-                  Client Portal Dashboard
+                  {isAdmin ? "Admin Console Control Room" : "Client Portal Dashboard"}
                 </button>
               </div>
+            ) : (
+              <button
+                id="nav-mob-login-btn"
+                onClick={() => {
+                  setCurrentPage("login");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 bg-black/5 text-black hover:bg-black/10 border border-black/10 rounded-xl text-xs font-bold uppercase tracking-wider"
+              >
+                Sign In to System Portal
+              </button>
             )}
 
             <button
