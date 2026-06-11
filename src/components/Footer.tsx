@@ -94,7 +94,6 @@ export default function Footer({ setCurrentPage }: FooterProps) {
               <li><button onClick={() => setCurrentPage("about")} className="transition-colors cursor-pointer text-left bg-transparent text-neutral-400 hover:text-neutral-200">Our Design Philosophy</button></li>
               <li><button onClick={() => setCurrentPage("blog")} className="transition-colors cursor-pointer text-left bg-transparent text-neutral-400 hover:text-neutral-200">Growth Blog Insights</button></li>
               <li><button onClick={() => setCurrentPage("contact")} className="transition-colors cursor-pointer text-left bg-transparent text-neutral-400 hover:text-neutral-200">Claim Free Audit</button></li>
-              <li><button onClick={() => setCurrentPage("login")} className="transition-colors cursor-pointer text-left bg-transparent text-[#66fcf1] hover:text-[#66fcf1]/80 font-bold uppercase tracking-wider text-[11px] mt-2 block">Client & Staff Workspace login</button></li>
             </ul>
           </div>
 
