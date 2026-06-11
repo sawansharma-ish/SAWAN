@@ -5,9 +5,32 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dns from "dns";
 import nodemailer from "nodemailer";
+import { createClient } from "@supabase/supabase-js";
 
 // Ensure DNS works smoothly
 dns.setDefaultResultOrder("ipv4first");
+
+// Initialize Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL || "https://yoiuspliqldjctosqleb.supabase.co";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "sb_publishable_qmX_PFO2sijgSOGkEKFY1Q_6Re3LKKV";
+console.log(`[Supabase Init] Connecting to project ${supabaseUrl}...`);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Helper to safely write to Supabase (non-blocking)
+async function saveToSupabase(tableName: string, data: any) {
+  try {
+    console.log(`[Supabase] Attempting to save record to ${tableName}...`);
+    const { data: result, error } = await supabase.from(tableName).insert([data]);
+    if (error) {
+      console.warn(`[Supabase Warning] Failed to insert to table "${tableName}". Detail:`, error.message);
+      console.warn(`💡 Tip: Ensure table "${tableName}" exists with RLS configured in your Supabase project "${supabaseUrl}".`);
+    } else {
+      console.log(`[Supabase Success] Record successfully saved in table "${tableName}".`);
+    }
+  } catch (err: any) {
+    console.warn(`[Supabase Error] Database connection failure:`, err.message || err);
+  }
+}
 
 const app = express();
 const PORT = 3000;
@@ -794,6 +817,9 @@ app.post("/api/leads", (req, res) => {
   db.leads.push(newLead);
   writeDB(db);
 
+  // Safely write to Supabase asynchronously
+  saveToSupabase("leads", newLead);
+
   res.status(201).json({ success: true, message: "Lead captured! Our automation experts will call you within 2 business hours." });
 });
 
@@ -818,6 +844,9 @@ app.post("/api/contact", (req, res) => {
 
   db.inquiries.push(newInq);
   writeDB(db);
+
+  // Safely write to Supabase asynchronously
+  saveToSupabase("inquiries", newInq);
 
   res.status(201).json({ success: true, message: "Inquiry successfully submitted. An architect has been assigned." });
 });
