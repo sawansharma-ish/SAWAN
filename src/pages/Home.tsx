@@ -12,10 +12,20 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
   // Mini FAQ Accordion states
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  // Before & After visualizer slider state
+  const [beforeAfterMode, setBeforeAfterMode] = useState<"before" | "after">("after");
+
+  // Lead Magnet states
+  const [playbookEmail, setPlaybookEmail] = useState("");
+  const [playbookName, setPlaybookName] = useState("");
+  const [playbookNiche, setPlaybookNiche] = useState("Clinics");
+  const [isSubmittingPlaybook, setIsSubmittingPlaybook] = useState(false);
+  const [playbookResult, setPlaybookResult] = useState<any | null>(null);
+
   const stats = [
     { num: "< 3 Sec", label: "Target Page Load Speed" },
     { num: "100%", label: "Mobile SEO Code Compliance" },
-    { num: "₹0 Retainer", label: "Direct Software Ownership" },
+    { num: "₹0 Upfront", label: "Zero-Risk Retainer Launch" },
     { num: "7-14 Days", label: "Standard Launch Turnaround" }
   ];
 
@@ -77,42 +87,51 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
           {/* Hero Left Brief */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-[#FFFDF2]/80 font-mono tracking-widest uppercase">
-              <Sparkles size={14} className="text-[#FFFDF2] animate-pulse" />
-              PREMIUM WEB SYSTEMS FOR LOCAL LEADERS
+              <Sparkles size={14} className="text-emerald-400 animate-pulse" />
+              ELITE CRO & WEB ARCHITECTS FOR LOCAL LEADERS
             </div>
 
             <h1 className="font-display font-black text-4xl sm:text-6xl tracking-tight leading-none text-white">
-              We build websites that get your local business <span className="font-serif italic text-[#FFFDF2] underline decoration-neutral-800 underline-offset-8">clients</span>
+              We build premium web systems that get your local business <span className="font-serif italic text-emerald-300 underline decoration-emerald-500/50 underline-offset-8">paying clients</span>
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              No generic templates or boring portfolios. We design premium tech platforms, booking engines, WhatsApp response workflows, and regional Maps SEO to convert visitors into loyal clients.
+              No generic slow templates or amateur freelancer code. We design ultra-premium, high-conversion custom systems, stylized scheduling modules, WhatsApp CRM pipelines, and dominant Delhi-NCR regional Map SEO. Complete source code ownership.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <button
-                id="hero-primary-cta"
-                onClick={() => openQuote()}
-                className="w-full sm:w-auto px-8 py-4 bg-[#FFFDF2] hover:bg-white text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-[0_0_25px_rgba(255,253,242,0.25)] shadow-md cursor-pointer"
-              >
-                Claim Free CRO Audit
-              </button>
-              <button
-                id="hero-secondary-cta"
-                onClick={() => setCurrentPage("services")}
-                className="w-full sm:w-auto px-8 py-4 bg-black border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                Explore Web Systems <ArrowRight size={14} />
-              </button>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                <button
+                  id="hero-primary-cta"
+                  onClick={() => openQuote()}
+                  className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] shadow-md cursor-pointer"
+                >
+                  Claim Free CRO & Local SEO Audit
+                </button>
+                <button
+                  id="hero-secondary-cta"
+                  onClick={() => setCurrentPage("services")}
+                  className="w-full sm:w-auto px-8 py-4 bg-black border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  Explore Core Services <ArrowRight size={14} />
+                </button>
+              </div>
+              <p className="text-[11px] font-mono text-emerald-400/90 text-center lg:text-left tracking-wide">
+                ⚠️ LIMITED CAPACITY: Only 3 custom blueprint spots remaining for this week.
+              </p>
             </div>
 
             {/* Micro proof badges */}
             <div className="flex flex-col sm:flex-row items-center gap-4 text-xs font-mono text-slate-400 pt-4 justify-center lg:justify-start border-t border-neutral-900">
-              <span>HEADQUARTERS:</span>
-              <div className="flex items-center gap-3">
-                <span className="text-[#FFFDF2]">📍 Delhi-NCR (HQ)</span>
+              <span className="font-bold tracking-wider">LOCAL AUDIT TARGETS:</span>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-1">
+                <span className="text-[#FFFDF2]">📍 GK-II South Delhi</span>
                 <span className="text-neutral-800">•</span>
-                <span className="text-[#FFFDF2] font-bold uppercase tracking-wider">🌍 Available Worldwide</span>
+                <span className="text-[#FFFDF2]">📍 Gurugram Sector 49</span>
+                <span className="text-neutral-800">•</span>
+                <span className="text-[#FFFDF2]">📍 Noida Sector 62</span>
+                <span className="text-neutral-800">•</span>
+                <span className="text-[#FFFDF2] font-semibold text-emerald-400">🌍 Metro India Active</span>
               </div>
             </div>
           </div>
@@ -201,6 +220,400 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
               </button>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* BEFORE VS AFTER CRO & PERFORMANCE VISUALIZER */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-black/10">
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <span className="text-[10px] font-mono font-bold text-black uppercase tracking-widest bg-black/5 px-3 py-1.5 rounded-full border border-black/10">Comparative Proof</span>
+          <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight leading-none text-center">
+            How our premium architectures transform your status
+          </h2>
+          <p className="text-neutral-700 text-sm">
+            Toggle our comparison profiles to discover how heavy unoptimized template frameworks leak local clients compared to hand-coded AURA WEB systems.
+          </p>
+
+          <div className="inline-flex rounded-xl bg-black/5 p-1 border border-black/15 mt-3">
+            <button
+              onClick={() => setBeforeAfterMode("before")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                beforeAfterMode === "before" ? "bg-red-600 text-white shadow-sm" : "text-neutral-600 hover:text-black"
+              }`}
+            >
+              🔴 Before (Slow Template)
+            </button>
+            <button
+              onClick={() => setBeforeAfterMode("after")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                beforeAfterMode === "after" ? "bg-emerald-600 text-white shadow-sm" : "text-neutral-600 hover:text-black"
+              }`}
+            >
+              🟢 After (AURA WEB System)
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#FFFDF2] border border-black/10 rounded-3xl p-6 sm:p-10 shadow-lg">
+          {/* Visual Showcase */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className={`p-6 rounded-2xl border transition-all duration-300 ${
+              beforeAfterMode === "before" ? "bg-red-50/50 border-red-200" : "bg-emerald-50/30 border-emerald-200"
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${
+                  beforeAfterMode === "before" ? "bg-red-100 text-red-800" : "bg-emerald-100 text-emerald-800"
+                }`}>
+                  {beforeAfterMode === "before" ? "Typical Freelancer WordPress" : "AURA WEB Custom Codebase"}
+                </span>
+                <span className="text-[11px] font-mono font-semibold text-slate-500">SYSTEM PROFILE</span>
+              </div>
+
+              <div className="space-y-4">
+                {beforeAfterMode === "before" ? (
+                  <>
+                    <h3 className="font-display font-bold text-xl text-red-950">Slow, Cluttered & Unsynchronized</h3>
+                    <p className="text-xs text-red-900/80 leading-relaxed">
+                      Generated on bulky builders with 27 unoptimized plugins. Visitors bounce due to load delays. Simple visual layout only, zero automated client queues or CRM pipelines.
+                    </p>
+                    <div className="space-y-2 pt-2 border-t border-red-200/50">
+                      <div className="flex justify-between text-xs text-red-900">
+                        <span>Speed Score (Lighthouse):</span>
+                        <span className="font-bold">32/100 (Critical)</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-red-900">
+                        <span>Delhi Google Pack Position:</span>
+                        <span className="font-bold">Not Pinned / Page 3</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-red-900">
+                        <span>WhatsApp CRM Sync:</span>
+                        <span className="font-bold">None (Manual Copying)</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-display font-medium text-xl text-emerald-950 font-serif italic">Prestige UI, High-Uptime Speed</h3>
+                    <p className="text-xs text-emerald-900/80 leading-relaxed">
+                      Hand-coded in React, Vite, and gorgeous clean Tailwind. Renders as a lightweight server-aligned unit. Automatically routes leads directly to physical back-offices immediately.
+                    </p>
+                    <div className="space-y-2 pt-2 border-t border-emerald-200/50">
+                      <div className="flex justify-between text-xs text-emerald-900">
+                        <span>Speed Score (Lighthouse):</span>
+                        <span className="font-bold text-emerald-600">99/100 (Perfect Score)</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-emerald-900">
+                        <span>Delhi Google Pack Position:</span>
+                        <span className="font-bold text-emerald-600">Top 3 Pinned (HQ)</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-emerald-900">
+                        <span>WhatsApp CRM Sync:</span>
+                        <span className="font-bold text-emerald-600">Instant Dynamic Webhook</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-black/5 rounded-xl border border-black/5 text-center">
+              <span className="text-[10px] font-mono uppercase font-bold text-slate-500 block mb-1">CONVERSION INSIGHT</span>
+              <p className="text-[11px] text-neutral-600 italic">
+                {beforeAfterMode === "before" 
+                  ? "“Every 1 second delay in mobile loading leaks up to 12% of high-intent clients.”" 
+                  : "“Automatic patient/client scheduling secures a massive 142% increment in verified local booking volumes.”"}
+              </p>
+            </div>
+          </div>
+
+          {/* Metric Comparison Boards */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-black/10 p-5 rounded-2xl relative overflow-hidden group">
+              <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">METRIC 1</span>
+              <h4 className="font-display font-bold text-sm text-black mb-3">Google Lighthouse Speed</h4>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden mb-3">
+                <div 
+                  className={`h-full transition-all duration-700 rounded-full ${
+                    beforeAfterMode === "before" ? "w-1/3 bg-red-400" : "w-full bg-emerald-500"
+                  }`}
+                ></div>
+              </div>
+              <div className="flex justify-between items-end font-mono">
+                <span className="text-xs text-slate-500">Rating:</span>
+                <span className={`text-xl font-black ${beforeAfterMode === "before" ? "text-red-500" : "text-emerald-500"}`}>
+                  {beforeAfterMode === "before" ? "32/100" : "99/100"}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-black/10 p-5 rounded-2xl relative overflow-hidden group">
+              <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">METRIC 2</span>
+              <h4 className="font-display font-bold text-sm text-black mb-3">Delhi NCR GMB Maps Rank</h4>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden mb-3">
+                <div 
+                  className={`h-full transition-all duration-700 rounded-full ${
+                    beforeAfterMode === "before" ? "w-[12%] bg-red-400" : "w-[95%] bg-emerald-500"
+                  }`}
+                ></div>
+              </div>
+              <div className="flex justify-between items-end font-mono">
+                <span className="text-xs text-slate-500">Position rank:</span>
+                <span className={`text-xl font-black ${beforeAfterMode === "before" ? "text-red-500" : "text-emerald-500"}`}>
+                  {beforeAfterMode === "before" ? "Unranked" : "Top-3 Pinned"}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-black/10 p-5 rounded-2xl relative overflow-hidden group">
+              <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">METRIC 3</span>
+              <h4 className="font-display font-bold text-sm text-black mb-3">Lead Leakage Ratio</h4>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden mb-3">
+                <div 
+                  className={`h-full transition-all duration-700 rounded-full ${
+                    beforeAfterMode === "before" ? "w-[85%] bg-red-400" : "w-[4%] bg-emerald-400"
+                  }`}
+                ></div>
+              </div>
+              <div className="flex justify-between items-end font-mono">
+                <span className="text-xs text-slate-500">Leaks percent:</span>
+                <span className={`text-xl font-black ${beforeAfterMode === "before" ? "text-red-500" : "text-emerald-500"}`}>
+                  {beforeAfterMode === "before" ? "85.2% Lost" : "Protected"}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-black/10 p-5 rounded-2xl relative overflow-hidden group">
+              <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">METRIC 4</span>
+              <h4 className="font-display font-bold text-sm text-black mb-3">Source Code Sovereignty</h4>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden mb-3">
+                <div 
+                  className={`h-full transition-all duration-700 rounded-full ${
+                    beforeAfterMode === "before" ? "w-[15%] bg-red-400" : "w-full bg-emerald-500"
+                  }`}
+                ></div>
+              </div>
+              <div className="flex justify-between items-end font-mono">
+                <span className="text-xs text-slate-500">SaaS status:</span>
+                <span className={`text-xl font-black ${beforeAfterMode === "before" ? "text-red-500" : "text-emerald-500"}`}>
+                  {beforeAfterMode === "before" ? "Locked-in" : "100% Owned"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* THE UNDISPUTED CHOICE: COMPARISON MATRIX */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-black/10">
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <span className="text-[10px] font-mono font-bold text-black uppercase tracking-widest bg-black/5 px-3 py-1.5 rounded-full border border-black/10">Competitive Audit Analysis</span>
+          <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight leading-none text-center">
+            How we protect GK-II & Delhi NCR leaders from obsolete development traps
+          </h2>
+          <p className="text-neutral-700 text-sm">
+            Invest in a permanent, high-conversion commercial asset instead of a generic informational brochure that leaks inquiries.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto bg-[#FFFDF2] border border-black/10 rounded-2xl">
+          <table className="w-full border-collapse text-left text-xs min-w-[700px]">
+            <thead>
+              <tr className="bg-black text-[#FFFDF2] border-b border-black">
+                <th className="p-4 font-mono uppercase tracking-wider font-bold">CRITICAL REQUIREMENTS</th>
+                <th className="p-4 font-mono uppercase tracking-wider font-bold text-neutral-400">LOW-COST FREELANCER</th>
+                <th className="p-4 font-mono uppercase tracking-wider font-bold text-neutral-400">TEMPLATED WORDPRESS AGENCY</th>
+                <th className="p-4 font-mono col-span-1 uppercase tracking-wider font-bold bg-emerald-600 text-white">AURA WEB SYSTEM</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/10">
+              <tr>
+                <td className="p-4 font-bold text-black">Upfront Financial Risk</td>
+                <td className="p-4 text-slate-500">50% upfront payment (Non-refundable)</td>
+                <td className="p-4 text-slate-500">50% upfront payment (Non-refundable)</td>
+                <td className="p-4 bg-emerald-500/10 text-emerald-950 font-extrabold text-xs">₹0 Upfront (Deploy first, pay only after successful review)</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-black">Mobile Page Load Speed</td>
+                <td className="p-4 text-slate-500">4 - 8 Seconds launch lag</td>
+                <td className="p-4 text-slate-500">3 - 6 Seconds launch lag</td>
+                <td className="p-4 bg-emerald-500/10 text-emerald-950 font-extrabold text-xs">&lt; 0.8 Seconds (Hand-coded React + Vite bundle optimization)</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-black">Active CRM & WhatsApp Pipeline</td>
+                <td className="p-4 text-red-700 font-bold">None (Static mail inbox leaks)</td>
+                <td className="p-4 text-amber-800 font-medium">Unstable third-party plugins</td>
+                <td className="p-4 bg-emerald-500/10 text-emerald-950 font-extrabold text-xs">Integrated WhatsApp Business Webhooks & instant notifications</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-black">Delhi NCR Structured SEO Schemas</td>
+                <td className="p-4 text-red-700">Completely absent</td>
+                <td className="p-4 text-slate-500">Basic Yoast metadata inputs</td>
+                <td className="p-4 bg-emerald-500/10 text-emerald-950 font-extrabold text-xs">JSON-LD rich results mapped onto physical landmarks & target terms</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-black">Uptime Monitoring & Backups</td>
+                <td className="p-4 text-slate-500">None (Charge added fees later)</td>
+                <td className="p-4 text-slate-500">Basic hosting routine</td>
+                <td className="p-4 bg-emerald-500/10 text-emerald-950 font-extrabold text-xs">Weekly automated cold storage offsets & continuous uptime scans (Free)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* LEAD MAGNET INTERACTIVE PLAYBOOK GENERATOR */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-black/10">
+        <div className="bg-black text-[#FFFDF2] rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-2xl border border-neutral-900">
+          <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24"></div>
+
+          <div className="relative z-10 max-w-4xl space-y-6">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded inline-block">
+              Immediate Authority access
+            </span>
+
+            <h3 className="font-display font-bold text-2xl sm:text-4xl text-white tracking-tight">
+              Build your customized 90-Day Digital Dominance Playbook instantly
+            </h3>
+            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
+              Describe your physical industry vertical (Clinics, Gyms, Salons, or Bistros) to immediately generate a localized Delhi-NCR action checklist directly on your screen. 
+            </p>
+
+            {!playbookResult ? (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!playbookName.trim() || !playbookEmail.trim()) {
+                    alert("Please provide name and email to generate the localized report.");
+                    return;
+                  }
+                  setIsSubmittingPlaybook(true);
+                  setTimeout(() => {
+                    let checklist = [];
+                    if (playbookNiche === "Clinics") {
+                      checklist = [
+                        "Deploy HIPAA-ready Patient Intake Schema in head tags to let search engine crawler nodes index physical coordinates.",
+                        "Initialize localized GK-II & South Delhi neighborhood keyword arrays targeting elite search categories.",
+                        "Embed instant Patient Booking module synced with WhatsApp CRM alert webhooks.",
+                        "Execute image and layout lazy-loading to secure an on-mobile Lighthouse score of 98+."
+                      ];
+                    } else if (playbookNiche === "Gyms") {
+                      checklist = [
+                        "Deploy dynamic 3-Day Free Guest Pass validator capturing leads in under 12 seconds.",
+                        "Weave Gurugram & Noida main location phrases into local hierarchical headers (H1/H2).",
+                        "Integrate visual sliders proving training outcome metrics and before/after stats.",
+                        "Configure physical coordinates structured data schema linked onto regional Google Local Packs."
+                      ];
+                    } else if (playbookNiche === "Salons") {
+                      checklist = [
+                        "Add specialized stylist schedulers enabling immediate calendar selection on-page.",
+                        "Generate physical QR booking counters linked with web onboarding routes directly.",
+                        "Maximize reviews capture using an automated checkout redirect script.",
+                        "Setup pristine fast portfolio galleries optimized to load beautifully on mobile screens."
+                      ];
+                    } else { // Bistros / Restaurants
+                      checklist = [
+                        "Embed NFC responsive tabletop menu files rendering in under 0.4 seconds.",
+                        "Deploy table booking validators matching live seating capacities and peak timelines.",
+                        "Include Schema.org FoodEstablishment metadata blocks loaded with menu items list.",
+                        "Install map locator buttons driving customers straight to map coordinates."
+                      ];
+                    }
+                    setPlaybookResult({
+                      niche: playbookNiche,
+                      name: playbookName,
+                      email: playbookEmail,
+                      checklist: checklist,
+                      timestamp: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                    });
+                    setIsSubmittingPlaybook(false);
+                  }, 1100);
+                }}
+                className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pt-3 bg-neutral-950/40 p-6 rounded-2xl border border-neutral-900"
+              >
+                <div className="md:col-span-3 space-y-1 text-left">
+                  <label className="text-[10px] font-mono text-neutral-400 font-bold block">YOUR NAME</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sawan"
+                    value={playbookName}
+                    onChange={(e) => setPlaybookName(e.target.value)}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <div className="md:col-span-3 space-y-1 text-left">
+                  <label className="text-[10px] font-mono text-neutral-400 font-bold block">YOUR EMAIL</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. sawan@auraweb.in"
+                    value={playbookEmail}
+                    onChange={(e) => setPlaybookEmail(e.target.value)}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <div className="md:col-span-3 space-y-1 text-left">
+                  <label className="text-[10px] font-mono text-neutral-400 font-bold block">PHYSICAL BUSINESS SEGMENT</label>
+                  <select
+                    value={playbookNiche}
+                    onChange={(e) => setPlaybookNiche(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="Clinics">Clinics & Medical Doctors</option>
+                    <option value="Gyms">Fitness Gyms & Studios</option>
+                    <option value="Salons">Beauty Salons & Spas</option>
+                    <option value="Bistros">Bistros & Restaurants</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPlaybook}
+                  className="md:col-span-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isSubmittingPlaybook ? "Generating Program..." : "Generate Guide Plan"}
+                </button>
+              </form>
+            ) : (
+              <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 space-y-4 text-left">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-neutral-900 pb-3 gap-2">
+                  <div>
+                    <h5 className="font-mono text-[9px] text-emerald-400 uppercase tracking-widest font-bold">CUSTOM AUDIT PROTOCOL</h5>
+                    <span className="text-sm font-bold text-white font-serif italic">Prepared specifically for {playbookResult.name} ({playbookResult.niche})</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500">Prepared on {playbookResult.timestamp}</span>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                    AURA WEB Lead Architects have generated these 4 absolute highest-ROI action items specifically configured for your segment to dominate regional search packets:
+                  </p>
+
+                  <ul className="space-y-2.5">
+                    {playbookResult.checklist.map((item: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-200 bg-neutral-900/50 p-3 rounded-lg border border-neutral-950">
+                        <span className="font-mono font-bold text-emerald-400 block mt-0.5">0{idx + 1}.</span>
+                        <span className="leading-normal">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="pt-4 border-t border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span className="text-[10px] font-mono text-slate-500">Your digital roadmap has been securely compiled. Close and try another if desired.</span>
+                  <button
+                    onClick={() => {
+                      setPlaybookResult(null);
+                      setPlaybookName("");
+                      setPlaybookEmail("");
+                    }}
+                    className="text-xs text-emerald-400 hover:underline font-mono"
+                  >
+                    Reset & Build New Strategy
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
