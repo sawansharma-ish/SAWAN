@@ -33,7 +33,14 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copiedSecret, setCopiedSecret] = useState(false);
 
-  // Parse token from secure recovery link
+  // Advanced security & UX state managers
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [captchaChallenge, setCaptchaChallenge] = useState<{ id: string; question: string } | null>(null);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+  // Parse token from secure recovery link & load Remembered Email
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("resetToken");
@@ -43,6 +50,13 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       setEmail(mail);
       setResetTokenInput(token);
       setSuccessBannerMsg("Passcode recovery link recognized! Please config your new credentials matching enterprise complexity.");
+    }
+
+    // Remember Me check
+    const savedEmail = localStorage.getItem("aura_remember_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
     }
   }, []);
 
@@ -64,15 +78,38 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password,
+          captchaAnswer: captchaChallenge ? captchaAnswer : undefined,
+          captchaChallengeId: captchaChallenge ? captchaChallenge.id : undefined
+        })
       });
       const data = await response.json();
 
       if (!response.ok) {
         setErrorMsg(data.error || "Login credentials were not recognized.");
+        
+        // Handle security CAPTCHA trigger
+        if (data.requireCaptcha) {
+          setCaptchaChallenge(data.captchaChallenge);
+          setCaptchaAnswer("");
+        }
+        
         setLoading(false);
         return;
       }
+
+      // Success: Save Remember Me selection
+      if (rememberMe) {
+        localStorage.setItem("aura_remember_email", email.trim());
+      } else {
+        localStorage.removeItem("aura_remember_email");
+      }
+
+      // Clear any remaining CAPTCHA
+      setCaptchaChallenge(null);
+      setCaptchaAnswer("");
 
       if (data.requireTwoFactor) {
         // Step 2 Verification needed
@@ -436,15 +473,56 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
                     Forgot passcode?
                   </button>
                 </div>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showLoginPassword ? "text" : "password"}
+                    required
+                    placeholder="e.g. password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:ring-1 focus:ring-[#66fcf1] focus:outline-none text-white transition-all placeholder-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    {showLoginPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Security CAPTCHA Challenge */}
+              {captchaChallenge && (
+                <div className="p-3.5 bg-teal-950/20 border border-teal-500/20 rounded-xl space-y-2">
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#66fcf1] font-mono uppercase tracking-widest font-bold">
+                    <ShieldAlert size={12} className="text-[#66fcf1]" /> Robot Security check
+                  </div>
+                  <p className="text-slate-300 text-xs font-semibold">{captchaChallenge.question}</p>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter mathematical result"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-[#66fcf1] focus:outline-none text-white font-mono"
+                  />
+                </div>
+              )}
+
+              {/* Remember Me Checkbox Selector */}
+              <div className="flex items-center space-x-2 pt-1 pb-1">
                 <input
-                  id="login-password"
-                  type="password"
-                  required
-                  placeholder="e.g. password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-[#66fcf1] focus:outline-none text-white transition-all placeholder-slate-700"
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-800 bg-slate-950 text-[#66fcf1] focus:ring-0 checked:bg-[#66fcf1] cursor-pointer"
                 />
+                <label htmlFor="remember-me" className="text-[10px] text-slate-400 font-mono tracking-wider cursor-pointer uppercase select-none">
+                  Remember My Email Address
+                </label>
               </div>
 
               <button
@@ -552,15 +630,61 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
 
               <div>
                 <label className="block text-[10px] font-mono text-slate-400 mb-1.5 uppercase font-bold tracking-wider">Set Secure Passcode</label>
-                <input
-                  id="reg-password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-[#66fcf1] focus:outline-none text-white transition-all placeholder-slate-700"
-                />
+                <div className="relative">
+                  <input
+                    id="reg-password"
+                    type={showSignupPassword ? "text" : "password"}
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-10 py-3 text-xs focus:ring-1 focus:ring-[#66fcf1] focus:outline-none text-white transition-all placeholder-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    {showSignupPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+
+                {/* Password policy checklist */}
+                {password.length > 0 && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-slate-950/60 border border-slate-900 text-[10px] space-y-1 text-left font-mono">
+                    <p className="text-[9px] text-[#66fcf1] uppercase tracking-widest font-bold mb-1.5">Secured Requirements Indicator:</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className={password.length >= 12 ? "text-emerald-400 font-bold" : "text-slate-600 font-bold"}>
+                        {password.length >= 12 ? "✓" : "○"}
+                      </span>
+                      <span className={password.length >= 12 ? "text-slate-300" : "text-slate-500"}>Minimum 12 characters (Length: {password.length})</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={/[A-Z]/.test(password) ? "text-emerald-400 font-bold" : "text-slate-600 font-bold"}>
+                        {/[A-Z]/.test(password) ? "✓" : "○"}
+                      </span>
+                      <span className={/[A-Z]/.test(password) ? "text-slate-300" : "text-slate-500"}>At least 1 uppercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={/[a-z]/.test(password) ? "text-emerald-400 font-bold" : "text-slate-600 font-bold"}>
+                        {/[a-z]/.test(password) ? "✓" : "○"}
+                      </span>
+                      <span className={/[a-z]/.test(password) ? "text-slate-300" : "text-slate-500"}>At least 1 lowercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={/\d/.test(password) ? "text-emerald-400 font-bold" : "text-slate-600 font-bold"}>
+                        {/\d/.test(password) ? "✓" : "○"}
+                      </span>
+                      <span className={/\d/.test(password) ? "text-slate-300" : "text-slate-500"}>At least 1 digit</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-emerald-400 font-bold" : "text-slate-600 font-bold"}>
+                        {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "✓" : "○"}
+                      </span>
+                      <span className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-slate-300" : "text-slate-500"}>At least 1 special character</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

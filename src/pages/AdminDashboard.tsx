@@ -3,7 +3,8 @@ import {
   BarChart3, Users, MessageSquareCode, ShieldAlert, Settings as SettingsIcon, 
   Search, RefreshCw, Filter, Calendar, ListFilter, Download, Eye, Trash2, 
   AlertTriangle, CheckCircle, Send, LayoutDashboard, Clock, Power, ShieldCheck, 
-  Smartphone, UserCheck, KeySquare, HelpCircle, ArrowRightLeft, FileCheck, Sparkles
+  Smartphone, UserCheck, KeySquare, HelpCircle, ArrowRightLeft, FileCheck, Sparkles,
+  Cpu, Layers, HardDrive, Mail, Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -13,9 +14,16 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "leads" | "whatsapp" | "security" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "leads" | "pricing" | "whatsapp" | "security" | "settings">("dashboard");
   const [token, setToken] = useState<string | null>(null);
   const [adminRole, setAdminRole] = useState<string>("Staff");
+
+  // Pricing config cache
+  const [pricingSettings, setPricingSettings] = useState<any>(null);
+  const [servicesPricing, setServicesPricing] = useState<any[]>([]);
+  const [selectedCampaignServiceIdx, setSelectedCampaignServiceIdx] = useState(0);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [savingPackages, setSavingPackages] = useState(false);
 
   // State data caches
   const [leads, setLeads] = useState<any[]>([]);
@@ -42,6 +50,11 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const [smtpPass, setSmtpPass] = useState("");
   const [whatsappToken, setWhatsappToken] = useState("");
   const [whatsappPhoneId, setWhatsappPhoneId] = useState("");
+
+  // System Health Monitoring states
+  const [systemStats, setSystemStats] = useState<any>(null);
+  const [systemAlerts, setSystemAlerts] = useState<any[]>([]);
+  const [loadingHealth, setLoadingHealth] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState({ show: false, text: "", isError: false });
@@ -138,6 +151,29 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     }
   };
 
+  const loadSystemStats = async () => {
+    setLoadingHealth(true);
+    const { ok, data } = await fetchWithAuth("/api/admin/system-stats");
+    if (ok && data) {
+      setSystemStats(data.stats || null);
+      setSystemAlerts(data.alerts || []);
+    }
+    setLoadingHealth(false);
+  };
+
+  const loadPricingConfig = async () => {
+    try {
+      const res = await fetch("/api/pricing-packages");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPricingSettings(data.pricingSettings);
+        setServicesPricing(data.servicesPricing);
+      }
+    } catch (err) {
+      console.error("Pricing settings load issue:", err);
+    }
+  };
+
   // Reload current active tab caches
   useEffect(() => {
     if (!token) return;
@@ -151,6 +187,10 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     } else if (activeTab === "security") {
       loadAuditLogs();
       loadSessions();
+      loadSystemStats();
+    } else if (activeTab === "pricing") {
+      loadPricingConfig();
+      loadLeads();
     }
   }, [token, activeTab, searchTerm, statusFilter, dateFilter, sortBy, leadsPage]);
 
@@ -339,6 +379,12 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${activeTab === "security" ? "bg-gradient-to-r from-teal-500/10 to-[#66fcf1]/10 border border-[#66fcf1]/20 text-[#66fcf1]" : "text-slate-400 hover:text-white hover:bg-slate-900"}`}
             >
               <ShieldAlert size={15} /> Security Gateway
+            </button>
+            <button
+              onClick={() => setActiveTab("pricing")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${activeTab === "pricing" ? "bg-gradient-to-r from-teal-500/10 to-[#66fcf1]/10 border border-[#66fcf1]/20 text-[#66fcf1]" : "text-slate-400 hover:text-white hover:bg-slate-900"}`}
+            >
+              <Sparkles size={15} /> Campaign Pricing
             </button>
             <button
               onClick={() => setActiveTab("settings")}
@@ -921,6 +967,146 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         {/* D. SECURITY VIEW TAB */}
         {activeTab === "security" && (
           <div className="space-y-6">
+
+            {/* Real-time System Diagnostics Control Station */}
+            <div className="bg-[#0f131a] border border-slate-800 rounded-3xl p-6 space-y-6">
+              <div className="flex justify-between items-center border-b border-slate-800/50 pb-4">
+                <div className="space-y-1">
+                  <h4 className="text-base font-bold text-white uppercase tracking-wide flex items-center gap-2">
+                    <Activity size={16} className="text-[#66fcf1] animate-pulse" /> Live API & Server Diagnostics
+                  </h4>
+                  <p className="text-slate-400 text-xs">
+                    Real-time network security health status and hardware resource allocations.
+                  </p>
+                </div>
+                <button
+                  onClick={loadSystemStats}
+                  disabled={loadingHealth}
+                  className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-xs font-mono"
+                >
+                  <RefreshCw size={12} className={loadingHealth ? "animate-spin" : ""} />
+                  {loadingHealth ? "POLLING..." : "REFRESH"}
+                </button>
+              </div>
+
+              {/* Status Indicators Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Server status */}
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-900/60 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+                    <span>Server Status</span>
+                    <Cpu size={12} className="text-emerald-400" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold font-mono text-emerald-400">ACTIVE</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Uptime: {systemStats ? `${Math.floor(systemStats.server.uptimeSeconds / 60)}m` : "Checking..."}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-mono">Node version: {systemStats?.server.nodeVersion || "Unknown"}</p>
+                </div>
+
+                {/* Database files stats */}
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-900/60 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+                    <span>Database Engine</span>
+                    <Layers size={12} className="text-[#66fcf1]" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold font-mono text-white">JSON</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Size: {systemStats?.database.storageUsedKB} KB</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-mono">Records: Users ({systemStats?.database.recordsCount.users}), AuditLogs ({systemStats?.database.recordsCount.auditLogs})</p>
+                </div>
+
+                {/* API latency stats */}
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-900/60 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+                    <span>API Performance</span>
+                    <Activity size={12} className="text-cyan-400" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold font-mono text-cyan-400">{systemStats?.api.avgLatencyMs ? `${systemStats.api.avgLatencyMs}ms` : "Active"}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Sessions: {systemStats?.api.activeSessionsCount}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-mono">Failed login blocks: {systemStats?.api.failedLoginAttemptsTracked}</p>
+                </div>
+
+                {/* SMTP status */}
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-900/60 space-y-2">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+                    <span>Email Integration</span>
+                    <Mail size={12} className={systemStats?.email.isSMTPConfigured ? "text-emerald-400" : "text-amber-400"} />
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`text-base font-bold font-mono truncate max-w-full ${systemStats?.email.isSMTPConfigured ? "text-emerald-400" : "text-amber-400"}`}>
+                      {systemStats?.email.isSMTPConfigured ? "SMTP OK" : "FALLBACK"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-mono truncate">Host: {systemStats?.email.host}</p>
+                </div>
+              </div>
+
+              {/* Resource Utilization Bar Indicators */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-950/50 border border-slate-900">
+                {/* CPU usage panel */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-slate-400 uppercase">Simulated CPU Utilization</span>
+                    <span className="text-[#66fcf1] font-bold">{systemStats?.resources.cpuUsagePercentage || 12}%</span>
+                  </div>
+                  <div className="h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-teal-500 to-[#66fcf1] rounded-full transition-all duration-500" 
+                      style={{ width: `${systemStats?.resources.cpuUsagePercentage || 12}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                    <span>0% (Idle)</span>
+                    <span>100% (Max load)</span>
+                  </div>
+                </div>
+
+                {/* Memory usage panel */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-slate-400 uppercase">Process Memory footprint</span>
+                    <span className="text-cyan-400 font-bold">{systemStats?.resources.memoryUsageMB || 45.2} MB <span className="text-slate-500 font-normal">/ {systemStats?.resources.memoryLimitMB || 512}MB</span></span>
+                  </div>
+                  <div className="h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500" 
+                      style={{ width: `${((systemStats?.resources.memoryUsageMB || 45.2) / (systemStats?.resources.memoryLimitMB || 512)) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                    <span>0 MB</span>
+                    <span>512 MB (Limit)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Diagnostics Security Alerts Centre */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Diagnostic System Alerts ({systemAlerts.length})</h5>
+                <div className="space-y-2">
+                  {systemAlerts.map(alert => (
+                    <div key={alert.id} className={`p-3.5 border rounded-xl flex items-start gap-3.5 text-xs ${alert.type === "CRITICAL" ? "bg-red-950/10 border-red-900/40 text-red-300" : "bg-amber-950/10 border-amber-900/40 text-amber-300"}`}>
+                      <AlertTriangle size={16} className={`shrink-0 mt-0.5 ${alert.type === "CRITICAL" ? "text-red-400" : "text-amber-400"}`} />
+                      <div className="space-y-1">
+                        <p className="font-semibold font-mono uppercase tracking-wider text-[11px]">{alert.component} • {alert.type}</p>
+                        <p className="text-slate-300 text-xs leading-relaxed">{alert.message}</p>
+                        <p className="text-[9px] text-slate-500 font-mono font-normal">Staged event: {new Date(alert.timestamp).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {systemAlerts.length === 0 && (
+                    <div className="p-4 border border-slate-900 bg-slate-950/20 text-slate-400 text-xs flex items-center gap-2 rounded-xl">
+                      <CheckCircle size={14} className="text-emerald-400" />
+                      <span>Diagnostics OK: No outstanding active alerts or critical system errors detected.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
             
             {/* Active Devices Sessions Container */}
             <div className="bg-[#0f131a] border border-slate-800 rounded-3xl p-6 space-y-4">
@@ -1026,6 +1212,411 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   </tbody>
                 </table>
               </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* FX. PRICING CAMPAIGN TAB */}
+        {activeTab === "pricing" && (
+          <div className="space-y-6">
+            
+            {/* 1. VISUAL CONVERSION ANALYTICS PANEL */}
+            <div className="bg-[#0f131a] border border-slate-800 rounded-3xl p-6">
+              <div className="border-b border-slate-800/60 pb-3 mb-6">
+                <h4 className="text-base font-bold text-white uppercase tracking-normal">Campaign Conversions & Engagement Diagnostics</h4>
+                <p className="text-xs text-slate-400">
+                  Real-time visual capture logs recording public page views, outbound WhatsApp clicks, and click-through rates.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Starter package stats card */}
+                <div className="bg-[#07080c] border border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Starter Package Tier</span>
+                  <div className="flex justify-between items-baseline mt-3">
+                    <div className="space-y-1">
+                      <span className="text-2xl font-display font-black text-[#66fcf1]">
+                        {pricingSettings?.packageStats?.Starter?.views || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Total Public Views</span>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <span className="text-2xl font-display font-black text-violet-400">
+                        {pricingSettings?.packageStats?.Starter?.clicks || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Outbound Clicks</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-[10.5px]">
+                    <span className="text-slate-500 font-mono">Conversion CTR Indicator:</span>
+                    <span className="font-mono font-bold text-teal-400">
+                      {(() => {
+                        const views = pricingSettings?.packageStats?.Starter?.views || 0;
+                        const clicks = pricingSettings?.packageStats?.Starter?.clicks || 0;
+                        return views > 0 ? ((clicks / views) * 100).toFixed(1) + "%" : "0.0%";
+                      })()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Growth pack stats card */}
+                <div className="bg-[#07080c] border border-violet-500/20 shadow-[0_0_20px_rgba(124,58,237,0.1)] p-5 rounded-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-violet-600/10 text-violet-400 text-[8px] font-mono font-bold px-2 py-0.5 rounded-bl">
+                    PRIMARY OFFER
+                  </div>
+                  <span className="text-[9px] font-mono text-violet-400 uppercase tracking-widest block font-bold">Growth Package Tier</span>
+                  <div className="flex justify-between items-baseline mt-3">
+                    <div className="space-y-1">
+                      <span className="text-2xl font-display font-black text-[#66fcf1]">
+                        {pricingSettings?.packageStats?.Growth?.views || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Total Public Views</span>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <span className="text-2xl font-display font-black text-violet-400">
+                        {pricingSettings?.packageStats?.Growth?.clicks || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Outbound Clicks</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-[10.5px]">
+                    <span className="text-slate-400 font-mono">Conversion CTR Indicator:</span>
+                    <span className="font-mono font-bold text-emerald-400">
+                      {(() => {
+                        const views = pricingSettings?.packageStats?.Growth?.views || 0;
+                        const clicks = pricingSettings?.packageStats?.Growth?.clicks || 0;
+                        return views > 0 ? ((clicks / views) * 100).toFixed(1) + "%" : "0.0%";
+                      })()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Premium pack stats card */}
+                <div className="bg-[#07080c] border border-amber-500/25 p-5 rounded-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-amber-500/10 text-amber-500 text-[8px] font-mono font-bold px-2 py-0.5 rounded-bl">
+                    HIGH-END SUITE
+                  </div>
+                  <span className="text-[9px] font-mono text-amber-500 uppercase tracking-widest block font-bold">Premium Package Tier</span>
+                  <div className="flex justify-between items-baseline mt-3">
+                    <div className="space-y-1">
+                      <span className="text-2xl font-display font-black text-[#66fcf1]">
+                        {pricingSettings?.packageStats?.Premium?.views || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Total Public Views</span>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <span className="text-2xl font-display font-black text-violet-400">
+                        {pricingSettings?.packageStats?.Premium?.clicks || 0}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Outbound Clicks</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-[10.5px]">
+                    <span className="text-slate-500 font-mono">Conversion CTR Indicator:</span>
+                    <span className="font-mono font-bold text-[#66fcf1]">
+                      {(() => {
+                        const views = pricingSettings?.packageStats?.Premium?.views || 0;
+                        const clicks = pricingSettings?.packageStats?.Premium?.clicks || 0;
+                        return views > 0 ? ((clicks / views) * 100).toFixed(1) + "%" : "0.0%";
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. GENERAL CAMPAIGN SETTINGS PANEL */}
+            <div className="bg-[#0f131a] border border-slate-800 rounded-3xl p-6">
+              <div className="border-b border-slate-800/60 pb-3 mb-6">
+                <h4 className="text-base font-bold text-white uppercase tracking-normal">Campaign Controls & Time-Expiry Parameters</h4>
+                <p className="text-xs text-slate-400">
+                  Directly toggle public campaigns, reset scarcity countdown clock deadlines, or tune package discounting multipliers.
+                </p>
+              </div>
+
+              {pricingSettings && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setSavingSettings(true);
+                    try {
+                      const expiresAt = new Date(Date.now() + (pricingSettings.timerDurationHours || 48) * 60 * 60 * 1000).toISOString();
+                      const { ok, data } = await fetchWithAuth("/api/admin/pricing-settings", {
+                        method: "PUT",
+                        body: JSON.stringify({
+                          timerExpiresAt: expiresAt,
+                          timerDurationHours: pricingSettings.timerDurationHours,
+                          offersEnabled: pricingSettings.offersEnabled,
+                          discounts: pricingSettings.discounts
+                        })
+                      });
+                      if (ok) {
+                        showBanner("Campaign general settings updated successfully!");
+                        loadPricingConfig();
+                      }
+                    } catch (err) {
+                      showBanner("Failed to save campaign general configurations.", true);
+                    } finally {
+                      setSavingSettings(false);
+                    }
+                  }}
+                  className="space-y-6 text-xs text-slate-300"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Offers active status */}
+                    <div className="bg-[#07080c] border border-slate-800 p-4.5 rounded-2xl flex items-center justify-between">
+                      <div className="space-y-1 pr-4">
+                        <label className="block font-bold text-slate-200">Active Campaign Discount Status</label>
+                        <span className="text-[10px] text-slate-400 block leading-normal font-mono">
+                          If disabled, standard base prices apply and the countdown shows "Offer Expired".
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={!!pricingSettings.offersEnabled}
+                        onChange={(e) => setPricingSettings({ ...pricingSettings, offersEnabled: e.target.checked })}
+                        className="w-5 h-5 accent-[#66fcf1] border-slate-800 bg-slate-900 rounded cursor-pointer shrink-0"
+                      />
+                    </div>
+
+                    {/* Timer Duration Input */}
+                    <div className="bg-[#07080c] border border-slate-800 p-4.5 rounded-2xl space-y-2">
+                      <label className="block font-bold text-slate-200 uppercase tracking-widest font-mono text-[9px]">
+                        SCARCITY COUNTDOWN DEADLINE (REMAINING HOURS)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="2400"
+                        value={pricingSettings.timerDurationHours || 48}
+                        onChange={(e) => setPricingSettings({ ...pricingSettings, timerDurationHours: parseInt(e.target.value) || 48 })}
+                        className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-[#66fcf1] font-mono text-sm"
+                        placeholder="48"
+                      />
+                      <span className="text-[9.5px] text-slate-500 font-mono block">
+                        Changes will auto-recalculate a fresh campaign expiration target relative to current clock state.
+                      </span>
+                    </div>
+
+                    {/* Discounts multiplier */}
+                    <div className="col-span-1 sm:col-span-2 bg-[#07080c] border border-slate-800 p-4.5 rounded-2xl space-y-4">
+                      <h5 className="font-bold text-slate-300 uppercase tracking-widest font-mono text-[9px] border-b border-slate-800 pb-2">
+                        Adjust Package Campaign Discounts percentages
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">Starter Discount %</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="90"
+                            value={pricingSettings.discounts?.Starter ?? 50}
+                            onChange={(e) => setPricingSettings({
+                              ...pricingSettings,
+                              discounts: { ...pricingSettings.discounts, Starter: parseInt(e.target.value) || 0 }
+                            })}
+                            className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-[#66fcf1] font-mono text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">Growth Discount %</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="90"
+                            value={pricingSettings.discounts?.Growth ?? 50}
+                            onChange={(e) => setPricingSettings({
+                              ...pricingSettings,
+                              discounts: { ...pricingSettings.discounts, Growth: parseInt(e.target.value) || 0 }
+                            })}
+                            className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-[#66fcf1] font-mono text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">Premium Discount %</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="90"
+                            value={pricingSettings.discounts?.Premium ?? 25}
+                            onChange={(e) => setPricingSettings({
+                              ...pricingSettings,
+                              discounts: { ...pricingSettings.discounts, Premium: parseInt(e.target.value) || 0 }
+                            })}
+                            className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-[#66fcf1] font-mono text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={savingSettings}
+                      className="px-6 py-3 bg-gradient-to-r from-teal-400 to-[#66fcf1] hover:from-teal-300 hover:to-cyan-300 text-slate-900 font-black rounded-xl text-xs transition-transform tracking-wider cursor-pointer shadow-lg active:scale-95 disabled:opacity-50"
+                    >
+                      {savingSettings ? "Applying parameters..." : "Apply Campaign Controls"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* 3. DYNAMIC SERVICES PACKAGES EDIT PANEL */}
+            <div className="bg-[#0f131a] border border-slate-800 rounded-3xl p-6">
+              <div className="border-b border-slate-800/60 pb-3 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h4 className="text-base font-bold text-white uppercase tracking-normal">Direct Package Price & Copy Editor</h4>
+                  <p className="text-xs text-slate-400">
+                    Modify active rates, descriptions, and feature matrices dynamically across each service.
+                  </p>
+                </div>
+                {servicesPricing.length > 0 && (
+                  <select
+                    value={selectedCampaignServiceIdx}
+                    onChange={(e) => setSelectedCampaignServiceIdx(parseInt(e.target.value))}
+                    className="bg-[#07080c] text-xs text-[#66fcf1] border border-slate-800 rounded-xl px-4 py-2.5 focus:outline-[#66fcf1]"
+                  >
+                    {servicesPricing.map((serv, sIdx) => (
+                      <option key={serv.name} value={sIdx}>
+                        {serv.name} Pack Group ({serv.packages?.length} Tiers)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {servicesPricing.length > 0 && servicesPricing[selectedCampaignServiceIdx] && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setSavingPackages(true);
+                    try {
+                      const { ok, data } = await fetchWithAuth("/api/admin/pricing-packages", {
+                        method: "PUT",
+                        body: JSON.stringify({
+                          servicesPricing
+                        })
+                      });
+                      if (ok) {
+                        showBanner("Pricing packages schema saved successfully!");
+                        loadPricingConfig();
+                      }
+                    } catch (err) {
+                      showBanner("Failed to save packages pricing structures.", true);
+                    } finally {
+                      setSavingPackages(false);
+                    }
+                  }}
+                  className="space-y-6 text-xs text-slate-300"
+                >
+                  <div className="space-y-6">
+                    {servicesPricing[selectedCampaignServiceIdx].packages.map((pkg: any, pIdx: number) => {
+                      const pkgTypes = ["Starter", "Growth", "Premium"] as const;
+                      const pType = pkgTypes[pIdx];
+
+                      return (
+                        <div key={pkg.name} className="bg-[#07080c] border border-slate-800 p-5 rounded-2xl space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h5 className="font-bold text-[#66fcf1] uppercase tracking-wider font-mono text-[10px] flex items-center gap-1.5">
+                              <Sparkles size={11} className={pType === "Growth" ? "text-violet-400 animate-pulse" : "text-[#66fcf1]"} />
+                              {pkg.name} ({pType} Tier Copy)
+                            </h5>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Package Display Price */}
+                            <div className="space-y-1.5">
+                              <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                                Target Discounted Display Price (e.g., ₹19,999)
+                              </label>
+                              <input
+                                type="text"
+                                value={pkg.price}
+                                onChange={(e) => {
+                                  const updated = [...servicesPricing];
+                                  updated[selectedCampaignServiceIdx].packages[pIdx].price = e.target.value;
+                                  setServicesPricing(updated);
+                                }}
+                                className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-[#66fcf1] font-mono font-bold"
+                                placeholder="₹19,999"
+                              />
+                            </div>
+
+                            {/* Verdict */}
+                            {pIdx === 0 && (
+                              <div className="space-y-1.5">
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                                  Service Verdict Indicator Status
+                                </label>
+                                <input
+                                  type="text"
+                                  value={servicesPricing[selectedCampaignServiceIdx].verdict}
+                                  onChange={(e) => {
+                                    const updated = [...servicesPricing];
+                                    updated[selectedCampaignServiceIdx].verdict = e.target.value;
+                                    setServicesPricing(updated);
+                                  }}
+                                  className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-[#66fcf1]"
+                                  placeholder="Strong Demand"
+                                />
+                              </div>
+                            )}
+
+                            {/* Desc */}
+                            <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                              <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                                Marketing Package Copy Description
+                              </label>
+                              <textarea
+                                rows={2}
+                                value={pkg.desc}
+                                onChange={(e) => {
+                                  const updated = [...servicesPricing];
+                                  updated[selectedCampaignServiceIdx].packages[pIdx].desc = e.target.value;
+                                  setServicesPricing(updated);
+                                }}
+                                className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-[#66fcf1] resize-none"
+                                placeholder="..."
+                              />
+                            </div>
+
+                            {/* Features list */}
+                            <div className="col-span-1 sm:col-span-2 space-y-1.5">
+                              <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                                Feature Highlights (One per line)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={pkg.features.join("\n")}
+                                onChange={(e) => {
+                                  const updated = [...servicesPricing];
+                                  updated[selectedCampaignServiceIdx].packages[pIdx].features = e.target.value.split("\n").filter(Boolean);
+                                  setServicesPricing(updated);
+                                }}
+                                className="w-full bg-[#0d0f14] border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-[#66fcf1] font-mono leading-relaxed"
+                                placeholder="Feature 1..."
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={savingPackages}
+                      className="px-6 py-3 bg-gradient-to-r from-teal-400 to-[#66fcf1] hover:from-teal-300 hover:to-cyan-300 text-slate-900 font-black rounded-xl text-xs transition-transform tracking-wider cursor-pointer shadow-lg active:scale-95 disabled:opacity-50"
+                    >
+                      {savingPackages ? "Saving changes..." : `Save Changes for ${servicesPricing[selectedCampaignServiceIdx].name}`}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
 
           </div>
