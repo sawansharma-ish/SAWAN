@@ -173,7 +173,29 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !phone || !password) return;
+    if (!name || !email || !phone || !password) {
+      setErrorMsg("Please complete all parameter fields.");
+      return;
+    }
+
+    // Client-side validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg("Email matches invalid format pattern.");
+      return;
+    }
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      setErrorMsg("WhatsApp number must be a valid 10-digit Indian phone number starting with 6-9.");
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setErrorMsg("Password policy rejected: Minimum 8 characters, including at least 1 uppercase, 1 lowercase, and 1 numeric digit.");
+      return;
+    }
 
     setLoading(true);
     setErrorMsg("");
@@ -183,7 +205,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email: email.trim(), phone, password })
+        body: JSON.stringify({ name, email: email.trim(), phone: phone.trim(), password })
       });
       const data = await response.json();
       if (response.ok && data.success) {
@@ -241,9 +263,9 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
     if (!email || !resetTokenInput || !newPasswordInput) return;
 
     // Check complexity rule client side for immediate visual assistance
-    const rule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{12,}$/;
+    const rule = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
     if (!rule.test(newPasswordInput)) {
-      setErrorMsg("Password policy rejected: Minimum 12 characters, including 1 uppercase, 1 lowercase, 1 numeric digit, and 1 special symbol.");
+      setErrorMsg("Password policy rejected: Minimum 8 characters, including at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit.");
       return;
     }
 

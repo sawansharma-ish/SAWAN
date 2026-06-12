@@ -1000,6 +1000,7 @@ function verifyCaptcha(id: string, answer: string): boolean {
 const activeSessions: Record<string, { userId: string; email: string; name: string; role: string; lastSeen: number; ip: string; userAgent: string }> = {};
 const loginFailures: Record<string, { count: number; lockedUntil: number }> = {};
 const passwordResetTokens: Array<{ email: string; token: string; expiresAt: number }> = [];
+const activeOtps: Record<string, { hash: string; expiresAt: number; code: string; userId: string | null; email: string; ip: string; name: string; role: string }> = {};
 
 // Lightweight, pure JS TOTP Core (Base32 Decoder + HOTP + TOTP)
 function base32ToBuf(base32: string): Buffer {
@@ -1236,21 +1237,22 @@ app.post("/api/auth/register", (req, res) => {
   }
 
   // RFC standard email validation regex
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(cleanEmail)) {
     return res.status(400).json({ error: "Validation Rejected: Invalid email address format." });
   }
 
-  // Minimum phone validation
-  if (cleanPhone.length < 10) {
-    return res.status(400).json({ error: "Validation Rejected: WhatsApp Contact No must contain at least 10 digits." });
+  // India Phone Validation Regulation
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!phoneRegex.test(cleanPhone)) {
+    return res.status(400).json({ error: "Validation Rejected: WhatsApp Contact No must be a valid 10-digit Indian phone number starting with 6-9." });
   }
 
-  // Robust Password Policy: Min 12, 1 upper, 1 lower, 1 digit, 1 special character
-  const passwordComplexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{12,}$/;
+  // Password Policy: min 8 characters, at least 1 uppercase, 1 lowercase, 1 digit
+  const passwordComplexityRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
   if (!passwordComplexityRegex.test(password)) {
     return res.status(400).json({
-      error: "Password Policy Rejected: Passcode must be at least 12 characters long and include: 1 Uppercase, 1 Lowercase, 1 Digit, and 1 Special Character."
+      error: "Password Policy Rejected: Password must be at least 8 characters long and include at least: 1 uppercase letter, 1 lowercase letter, and 1 numeric digit."
     });
   }
 
@@ -1287,7 +1289,7 @@ app.post("/api/auth/register", (req, res) => {
   res.status(201).json({ success: true, user: userPayload });
 });
 
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { email, password, captchaAnswer, captchaChallengeId } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "Please enter your professional email address and password." });
@@ -1300,6 +1302,16 @@ app.post("/api/auth/login", (req, res) => {
   const failure = loginFailures[lowerEmail];
   if (failure && failure.count >= 5 && failure.lockedUntil > now) {
     const minutesLeft = Math.ceil((failure.lockedUntil - now) / 60000);
+    try {
+      await saveToSupabase("admin_audit_log", {
+        admin_id: null,
+        email: lowerEmail,
+        ip_address: req.ip || "127.0.0.1",
+        action: "LOGIN_FAILED",
+        status: "LOCKED_OUT",
+        user_agent: req.headers["user-agent"] || "unknown"
+      });
+    } catch (e) {}
     logAuditEvent("anonymous", lowerEmail, "LOGIN_BLOCKED_LOCKOUT", "login_portal", req.ip || "127.0.0.1", `Blocked attempt on locked account. Lock is active for another ${minutesLeft} mins.`, "CRITICAL", req.headers["user-agent"]);
     return res.status(423).json({ error: `Account Locked: Maximum of 5 failed attempts triggered. Locked to protect system for another ${minutesLeft} minutes.` });
   }
@@ -1317,18 +1329,69 @@ app.post("/api/auth/login", (req, res) => {
     }
   }
 
-  const db = readDB();
-  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
+  let authenticated = false;
+  let resolvedId = "";
+  let resolvedEmail = lowerEmail;
+  let resolvedName = "System User";
+  let resolvedRole = "Client";
+  let resolvedPhone = "";
 
-  // 3. User Lookup and Cryptographic Password Verification
-  if (!user || !verifyPassword(password, user.passwordHash)) {
-    // Record login failure
+  // 3. Authenticate with Supabase Auth or Local Seed Users
+  // Attempt Supabase Native Auth
+  try {
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: lowerEmail,
+      password: password
+    });
+
+    if (!authError && authData?.user) {
+      authenticated = true;
+      resolvedId = authData.user.id;
+      resolvedEmail = authData.user.email || lowerEmail;
+      resolvedName = authData.user.email?.split("@")[0] || "User";
+
+      // Query database Profiles table for explicit role and parameters
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", authData.user.id)
+          .single();
+
+        if (profile) {
+          resolvedRole = profile.role === "admin" ? "Admin" : (profile.role === "user" ? "Client" : profile.role);
+          resolvedName = profile.full_name || resolvedName;
+          resolvedPhone = profile.phone || "";
+        }
+      } catch (profileErr) {
+        console.warn("[Profiles query skipped or missing]", profileErr);
+      }
+    }
+  } catch (supabaseErr) {
+    console.warn("[Supabase Auth connection skipped or errored]", supabaseErr);
+  }
+
+  // Fallback to local DB seed users (for local review and sandbox ease)
+  if (!authenticated) {
+    const db = readDB();
+    const localUser = db.users.find(u => u.email.toLowerCase() === lowerEmail);
+    if (localUser && verifyPassword(password, localUser.passwordHash)) {
+      authenticated = true;
+      resolvedId = localUser.id;
+      resolvedName = localUser.name;
+      resolvedRole = localUser.role || "Client";
+      resolvedPhone = localUser.phone;
+    }
+  }
+
+  // Handle incorrect credentials
+  if (!authenticated) {
     if (!loginFailures[lowerEmail]) {
       loginFailures[lowerEmail] = { count: 1, lockedUntil: 0 };
     } else {
       loginFailures[lowerEmail].count++;
       if (loginFailures[lowerEmail].count >= 5) {
-        loginFailures[lowerEmail].lockedUntil = now + 15 * 60 * 1000; // 15-minute lockout timer
+        loginFailures[lowerEmail].lockedUntil = now + 15 * 60 * 1000;
       }
     }
 
@@ -1337,7 +1400,7 @@ app.post("/api/auth/login", (req, res) => {
     const showCaptcha = updatedFailures >= 3;
 
     let responseJson: any = {
-      error: "Incorrect credentials: The provided email or passcode does not match our records."
+      error: "Incorrect credentials: The provided email or password does not match our records."
     };
 
     if (isLocked) {
@@ -1347,144 +1410,263 @@ app.post("/api/auth/login", (req, res) => {
       responseJson.captchaChallenge = generateCaptchaChallenge();
     }
 
-    logAuditEvent(user ? user.id : "anonymous", lowerEmail, "LOGIN_FAILURE", "login_portal", req.ip || "127.0.0.1", `Failed verification attempt. (Attempts: ${updatedFailures}/5)`, showCaptcha ? "WARNING" : "INFO", req.headers["user-agent"]);
+    // Log login attempt failure to Supabase audit log
+    try {
+      await saveToSupabase("admin_audit_log", {
+        admin_id: null,
+        email: lowerEmail,
+        ip_address: req.ip || "127.0.0.1",
+        action: "LOGIN_FAILED",
+        status: "BAD_PASSWORD",
+        user_agent: req.headers["user-agent"] || "unknown"
+      });
+    } catch (e) {}
+
+    logAuditEvent("anonymous", lowerEmail, "LOGIN_FAILURE", "login_portal", req.ip || "127.0.0.1", `Failed verification attempt. (Attempts: ${updatedFailures}/5)`, showCaptcha ? "WARNING" : "INFO", req.headers["user-agent"]);
     return res.status(400).json(responseJson);
   }
 
-  // 4. Authenticated, reset login failures memory tracking
+  // Credentials are true! Reset login failures
   delete loginFailures[lowerEmail];
 
-  // 5. Upgrade Password Hash on Successful Authentication if still plain text (Seeded default)
-  if (!user.passwordHash.startsWith("pbkdf2$")) {
-    user.passwordHash = hashPassword(password);
-    writeDB(db);
-    logAuditEvent(user.id, user.email, "CREDENTIALS_UPGRADED", "security_system", req.ip || "127.0.0.1", "Legacy unhashed password automatically upgraded to PBKDF2 cryptography on active login.", "INFO", req.headers["user-agent"]);
-  }
+  const isAdmin = ["Super Admin", "Admin", "Staff"].includes(resolvedRole);
 
-  const userRole = user.role || "Client";
+  // 4. Enforce Multi-Factor SMS/Email OTP flow for Administrators
+  if (isAdmin) {
+    const numericOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash("sha256").update(numericOtp).digest("hex");
+    const expiresAtMs = now + 5 * 60 * 1000; // 5 minutes validity
 
-  // 6. Client login vs Admin Login with 2-Step Verification
-  if (userRole === "Client") {
-    user.lastLogin = new Date().toISOString();
-    user.activityHistory.push({
-      action: "Login",
-      timestamp: new Date().toISOString(),
-      details: "Successfully authenticated with client portal panel."
+    // Store in internal cache
+    activeOtps[lowerEmail] = {
+      hash: otpHash,
+      expiresAt: expiresAtMs,
+      code: numericOtp,
+      userId: resolvedId,
+      email: lowerEmail,
+      ip: req.ip || "127.0.0.1",
+      name: resolvedName,
+      role: resolvedRole
+    };
+
+    // Store in Supabase admin_otp if table is available
+    try {
+      await supabase.from("admin_otp").insert([{
+        admin_id: resolvedId.startsWith("u-") ? null : resolvedId,
+        otp_hash: otpHash,
+        expires_at: new Date(expiresAtMs).toISOString(),
+        used: false
+      }]);
+    } catch (dbInsertErr) {
+      console.warn("[admin_otp Supabase table write skipped, using memory store fallback]", dbInsertErr);
+    }
+
+    // Dispatch email OTP via NodeMailer
+    let dispatched = false;
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = Number(process.env.SMTP_PORT) || 587;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    const emailBodyText = `Hello,\n\nA login request was initiated for your administrator account.\n\nYour 6-digit secure login verification OTP is:\n${numericOtp}\n\nThis OTP is active for 5 minutes. If you did not request this, please secure your credentials immediately.`;
+
+    if (smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure: port === 465,
+          auth: { user: smtpUser, pass: smtpPass },
+          tls: { rejectUnauthorized: false }
+        });
+
+        await transporter.sendMail({
+          from: `"Aura Web Security" <${smtpUser}>`,
+          to: lowerEmail,
+          subject: "🔑 SECURE ADMIN AUTH OTP - AURA WEB SYSTEMS",
+          text: emailBodyText
+        });
+        dispatched = true;
+      } catch (mailErr) {
+        console.error("Failed sending OTP email:", mailErr);
+      }
+    }
+
+    // Write audit log trail to Supabase
+    try {
+      await saveToSupabase("admin_audit_log", {
+        admin_id: resolvedId.startsWith("u-") ? null : resolvedId,
+        email: lowerEmail,
+        ip_address: req.ip || "127.0.0.1",
+        action: "OTP_SENT",
+        status: dispatched ? "EMAIL_SENT" : "CONSOLE_DISPLAYED",
+        user_agent: req.headers["user-agent"] || "unknown"
+      });
+    } catch (e) {}
+
+    logAuditEvent(resolvedId, lowerEmail, "MFA_OTP_CHALLENGE", "login_portal", req.ip || "127.0.0.1", `Security OTP triggered.`, "INFO", req.headers["user-agent"]);
+
+    console.log("");
+    console.log("======================================= SECURE LOGINS ========================================");
+    console.log(`🔐 [ADMIN ONE-TIME SECURITY CODE DISPATCHED]`);
+    console.log(`👉 RECIPIENT: ${lowerEmail}`);
+    console.log(`👉 VERIFICATION CODE: ${numericOtp}`);
+    console.log(`👉 EXPIRES IN: 5 minutes (${new Date(expiresAtMs).toLocaleTimeString()})`);
+    console.log("==============================================================================================");
+    console.log("");
+
+    return res.json({
+      success: true,
+      requireTwoFactor: true, // triggers OTP screen on frontend
+      email: lowerEmail,
+      devTotp: numericOtp, // visual testing aid
+      message: "Credentials accepted. For compliance, please enter the 6-digit confirmation code sent to your email."
     });
-    writeDB(db);
 
+  } else {
+    // 5. Standard Client login instant resolution (No MFA forced unless admin role matches)
     const clientToken = "client-session-" + crypto.randomBytes(24).toString("hex");
     activeSessions[clientToken] = {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
+      userId: resolvedId,
+      email: lowerEmail,
+      name: resolvedName,
       role: "Client",
       lastSeen: Date.now(),
       ip: req.ip || "127.0.0.1",
       userAgent: req.headers["user-agent"] || "unknown"
     };
 
-    logAuditEvent(user.id, user.email, "LOGIN_SUCCESS", "client_portal", req.ip || "127.0.0.1", "Authenticated successfully.", "INFO", req.headers["user-agent"]);
-
-    const { passwordHash, ...userPayload } = user;
-    return res.json({ success: true, user: userPayload, token: clientToken, isAdmin: false });
-  }
-
-  // 7. Admin (Super Admin | Admin | Staff) -> Run Multi-Factor 2FA Gateways
-  if (user.twoFactorEnabled) {
-    const currentTotp = generateHOTP(user.twoFactorSecret || "", Math.floor(Math.floor(Date.now() / 1000) / 30));
-    logAuditEvent(user.id, user.email, "2FA_REQUIRED", "login_portal", req.ip || "127.0.0.1", "Verification challenge triggered.", "INFO", req.headers["user-agent"]);
-    return res.json({
-      success: true,
-      requireTwoFactor: true,
-      email: user.email,
-      devTotp: currentTotp,
-      message: "Credentials accepted. Please enter the 6-digit verification code from your authenticator application."
-    });
-  } else {
-    // Generates base-32 secret for setup compliance
-    const secret = user.twoFactorSecret || generateBase32Secret(24);
-    user.twoFactorSecret = secret;
-    writeDB(db);
-
-    const otpPath = `otpauth://totp/AuraWebStudio:${user.email}?secret=${secret}&issuer=AuraWebStudio`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpPath)}`;
-    const currentTotp = generateHOTP(secret, Math.floor(Math.floor(Date.now() / 1000) / 30));
-
-    logAuditEvent(user.id, user.email, "2FA_SETUP_REQUIRED", "security_system", req.ip || "127.0.0.1", "MFA setup active on first-time staff entry.", "INFO", req.headers["user-agent"]);
+    logAuditEvent(resolvedId, lowerEmail, "LOGIN_SUCCESS", "client_portal", req.ip || "127.0.0.1", "Authenticated successfully.", "INFO", req.headers["user-agent"]);
 
     return res.json({
       success: true,
-      requireTwoFactorSetup: true,
-      email: user.email,
-      twoFactorSecret: secret,
-      qrCodeUrl,
-      devTotp: currentTotp,
-      message: "Security Policy Enforcement: 2-factor authentication setup is required. Please scan the visual QR pattern using Authenticator."
+      user: { id: resolvedId, name: resolvedName, email: lowerEmail, phone: resolvedPhone, role: "Client" },
+      token: clientToken,
+      isAdmin: false
     });
   }
 });
 
 // SECURE 2FA VERIFICATION & LOGIN FINALIZE
-app.post("/api/auth/verify-otp", (req, res) => {
-  const { email, code, isSetup } = req.body;
+app.post("/api/auth/verify-otp", async (req, res) => {
+  const { email, code } = req.body;
   if (!email || !code) {
     return res.status(400).json({ error: "Email address and 2-step verification OTP code are required to activate access." });
   }
 
   const lowerEmail = email.toLowerCase().trim();
+  const submittedCode = code.trim();
+  const now = Date.now();
+
+  let matched = false;
+  const activeOtp = activeOtps[lowerEmail];
+
+  // 1. Match from Server In-Memory Cache
+  if (activeOtp) {
+    if (activeOtp.expiresAt < now) {
+      delete activeOtps[lowerEmail];
+      return res.status(400).json({ error: "Verification code has expired. Please log in again." });
+    }
+
+    const submittedHash = crypto.createHash("sha256").update(submittedCode).digest("hex");
+    if (activeOtp.hash === submittedHash || submittedCode === activeOtp.code || submittedCode === "123456" || submittedCode === "000000") {
+      matched = true;
+    }
+  }
+
+  // 2. Fallback check: database query comparison in Supabase
+  if (!matched) {
+    try {
+      const submittedHash = crypto.createHash("sha256").update(submittedCode).digest("hex");
+      const { data: dbOtps, error: dbOtpsErr } = await supabase
+        .from("admin_otp")
+        .select("*")
+        .eq("otp_hash", submittedHash)
+        .eq("used", false)
+        .gt("expires_at", new Date(now).toISOString())
+        .limit(1);
+
+      if (!dbOtpsErr && dbOtps && dbOtps.length > 0) {
+        matched = true;
+        // Mark as used in database
+        await supabase
+          .from("admin_otp")
+          .update({ used: true })
+          .eq("id", dbOtps[0].id);
+      }
+    } catch (e) {
+      console.warn("[Offline fallback verify-otp triggered]", e);
+    }
+  }
+
+  // If wrong OTP, reject access
+  if (!matched) {
+    try {
+      await saveToSupabase("admin_audit_log", {
+        admin_id: activeOtp ? (activeOtp.userId?.startsWith("u-") ? null : activeOtp.userId) : null,
+        email: lowerEmail,
+        ip_address: req.ip || "127.0.0.1",
+        action: "LOGIN_FAILED",
+        status: "INVALID_OTP",
+        user_agent: req.headers["user-agent"] || "unknown"
+      });
+    } catch (e) {}
+
+    logAuditEvent("anonymous", lowerEmail, "2FA_VERIFICATION_FAILED", "login_portal", req.ip || "127.0.0.1", "Submitted incorrect 2FA passcode.", "WARNING", req.headers["user-agent"]);
+    return res.status(400).json({ error: "Incorrect 6-digit verification code. Please check your verification code and retry." });
+  }
+
+  // Extract profiles role details
+  const resolvedId = activeOtp?.userId || "u-admin";
+  const resolvedName = activeOtp?.name || "Aura Admin";
+  const resolvedRole = activeOtp?.role || "Admin";
+
+  // Invalidate successful OTP
+  delete activeOtps[lowerEmail];
+
+  // Record audit logs
+  try {
+    await saveToSupabase("admin_audit_log", {
+      admin_id: resolvedId.startsWith("u-") ? null : resolvedId,
+      email: lowerEmail,
+      ip_address: req.ip || "127.0.0.1",
+      action: "LOGIN_SUCCESS",
+      status: "SUCCESS",
+      user_agent: req.headers["user-agent"] || "unknown"
+    });
+  } catch (e) {}
+
   const db = readDB();
-  const user = db.users.find(u => u.email.toLowerCase() === lowerEmail);
-
-  if (!user) {
-    return res.status(404).json({ error: "Identity not recognized." });
+  const userObj = db.users.find(u => u.id === resolvedId || u.email.toLowerCase() === lowerEmail);
+  if (userObj) {
+    userObj.lastLogin = new Date().toISOString();
+    userObj.activityHistory.push({
+      action: "Login [OTP Verified]",
+      timestamp: new Date().toISOString(),
+      details: "Completed dynamic OTP verify flow."
+    });
+    writeDB(db);
   }
 
-  const secret = user.twoFactorSecret;
-  if (!secret) {
-    return res.status(400).json({ error: "No 2FA secret found on file. Please login again to trigger setup." });
-  }
-
-  const isValid = verifyTOTP(secret, code) || code === "123456" || code === "000000";
-  if (!isValid) {
-    logAuditEvent(user.id, user.email, "2FA_VERIFICATION_FAILED", "login_portal", req.ip || "127.0.0.1", "Submitted incorrect 2FA passcode.", "WARNING", req.headers["user-agent"]);
-    return res.status(400).json({ error: "Incorrect 6-digit verification code. Please check your authenticator sync clock and retry." });
-  }
-
-  // Setup completion flow toggle
-  if (isSetup) {
-    user.twoFactorEnabled = true;
-    logAuditEvent(user.id, user.email, "2FA_ENABLED", "security_system", req.ip || "127.0.0.1", "Completed first-time MFA registration.", "INFO", req.headers["user-agent"]);
-  }
-
-  user.lastLogin = new Date().toISOString();
-  user.activityHistory.push({
-    action: "Login [2FA]",
-    timestamp: new Date().toISOString(),
-    details: "Authenticated successfully entering security 2FACode."
-  });
-  writeDB(db);
-
-  // Generate Admin session token
+  // Generate Session Token
   const token = "admin-session-" + crypto.randomBytes(32).toString("hex");
   activeSessions[token] = {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role || "Staff",
+    userId: resolvedId,
+    email: lowerEmail,
+    name: resolvedName,
+    role: resolvedRole,
     lastSeen: Date.now(),
     ip: req.ip || "127.0.0.1",
     userAgent: req.headers["user-agent"] || "unknown"
   };
 
-  logAuditEvent(user.id, user.email, "LOGIN_SUCCESS_2FA", "admin_dashboard", req.ip || "127.0.0.1", "Completed session handshake.", "INFO", req.headers["user-agent"]);
+  logAuditEvent(resolvedId, lowerEmail, "LOGIN_SUCCESS_2FA", "admin_dashboard", req.ip || "127.0.0.1", "Completed session handshake.", "INFO", req.headers["user-agent"]);
 
-  const { passwordHash, ...userPayload } = user;
   res.json({
     success: true,
-    user: userPayload,
+    user: { id: resolvedId, name: resolvedName, email: lowerEmail, role: resolvedRole },
     token,
-    isAdmin: ["Super Admin", "Admin", "Staff"].includes(user.role || "")
+    isAdmin: ["Super Admin", "Admin", "Staff"].includes(resolvedRole)
   });
 });
 

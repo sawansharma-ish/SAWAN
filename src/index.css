@@ -1,11 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --color-cream: #FFFDF2;
+  --color-cream: #F8F6F1;
+  --color-primary-navy: #0F172A;
+  --color-secondary-ivory: #F8F6F1;
+  --color-accent-gold: #C89B3C;
+  --color-charcoal: #1E293B;
+  --color-slate: #475569;
+  --color-light-gray: #E2E8F0;
 }
 
 /* Base resets & custom animations */
@@ -14,8 +20,8 @@ body, button, input, textarea, select {
 }
 
 body {
-  background-color: #FFFDF2; /* Premium Cream */
-  color: #000000; /* Deep Black */
+  background-color: #F8F6F1; /* Soft Ivory */
+  color: #1E293B; /* Charcoal */
   overflow-x: hidden;
 }
 

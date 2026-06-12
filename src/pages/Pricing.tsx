@@ -352,7 +352,7 @@ export default function Pricing({ openQuote }: PricingProps) {
   const activeSettings = dbPricingSettings || {
     timerExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
     offersEnabled: true,
-    discounts: { Starter: 50, Growth: 50, Premium: 25 }
+    discounts: { Starter: 50, Growth: 50, Premium: 50 }
   };
 
   const isOffersActive = activeSettings.offersEnabled;

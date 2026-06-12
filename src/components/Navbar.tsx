@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Layout, LogIn, User, ShieldCheck, LogOut, Menu, X } from "lucide-react";
+import { Sparkles, Layout, ShieldCheck, Menu, X } from "lucide-react";
 import { Logo } from "./Logo";
 
 interface NavbarProps {
@@ -26,7 +26,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
   ];
 
   return (
-    <nav className="sticky top-0 z-40 w-full glass-effect border-b border-slate-200/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-40 w-full bg-secondary-ivory border-b border-light-gray/40 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Desktop Layout - Stacked Branding (Centered) and Navigation Sections Row */}
@@ -46,45 +46,21 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
               <Logo variant="header" />
             </div>
 
-            {/* Right Hand: Auth or Client Portal Status + CTA CTA */}
+            {/* Right Hand: Strategic Call CTA */}
             <div className="w-[380px] flex items-center justify-end gap-3">
-              {user && (
-                <div className="flex items-center gap-2.5 bg-[#FFFDF2] px-3 py-1.5 rounded-xl border border-black/10">
-                  <span className="text-xs font-semibold text-black flex items-center gap-1">
-                    <User size={13} className="text-black" />
-                    {user.name.split(" ")[0]}
-                  </span>
-                  <button
-                    id="navbar-dash-link"
-                    onClick={() => setCurrentPage(isAdmin ? "admin" : "dashboard")}
-                    className="px-2.5 py-1 bg-black hover:bg-neutral-900 text-[#FFFDF2] text-[11px] font-medium rounded-lg transition-all"
-                  >
-                    {isAdmin ? "Admin Console" : "Portal"}
-                  </button>
-                  <button
-                    id="navbar-logout-btn"
-                    onClick={logout}
-                    className="p-1 hover:text-red-650 text-slate-500 transition-colors rounded-lg hover:bg-black/5"
-                    title="Logout"
-                  >
-                    <LogOut size={13} />
-                  </button>
-                </div>
-              )}
-
               <button
                 id="nav-cta-btn"
                 onClick={() => openQuote()}
-                className="px-4 py-2 bg-black hover:bg-neutral-900 text-[#FFFDF2] font-semibold rounded-xl text-xs shadow-md shadow-black/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                className="px-4 py-2 bg-primary-navy hover:bg-accent-gold text-white font-semibold rounded-xl text-xs shadow-md shadow-primary-navy/10 hover:scale-[1.01] active:scale-[0.99] transition-all duration-250"
               >
-                Get Free Estimate
+                Book Free Strategy Call
               </button>
             </div>
           </div>
 
           {/* Bottom Line: Beautiful, spacious and centered Navigation Row */}
-          <div className="w-full border-t border-black/10 pt-3 flex justify-center">
-            <div className="flex items-center gap-1.5 bg-black/5 p-1 rounded-2xl border border-black/5">
+          <div className="w-full border-t border-black/5 pt-3 flex justify-center">
+            <div className="flex items-center gap-1.5 bg-neutral-200/50 p-1 rounded-2xl border border-black/5">
               {navItems.map((item) => (
                 <button
                   key={item.id}
@@ -92,8 +68,8 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                   onClick={() => setCurrentPage(item.id)}
                   className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
                     currentPage === item.id
-                      ? "bg-black text-[#FFFDF2] shadow-sm"
-                      : "text-slate-650 hover:text-black hover:bg-black/5"
+                      ? "bg-primary-navy text-white shadow-sm"
+                      : "text-slate hover:text-primary-navy hover:bg-white"
                   }`}
                 >
                   {item.label}
@@ -113,7 +89,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
             <button
               id="mobile-menu-trigger"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 text-slate-755 hover:text-slate-950 rounded-lg hover:bg-slate-100"
+              className="p-1.5 text-slate hover:text-primary-navy rounded-lg hover:bg-black/5"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -124,7 +100,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-black/10 bg-[#FFFDF2] px-4 py-6 space-y-4 shadow-xl">
+        <div className="md:hidden border-t border-black/5 bg-secondary-ivory px-4 py-6 space-y-4 shadow-xl">
           <div className="grid grid-cols-2 gap-2">
             {navItems.map((item) => (
               <button
@@ -135,7 +111,7 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
                   setMobileMenuOpen(false);
                 }}
                 className={`py-3 px-4 rounded-xl text-sm font-semibold uppercase tracking-wider text-left transition-all ${
-                  currentPage === item.id ? "bg-black text-[#FFFDF2]" : "bg-black/5 text-black hover:bg-black/10"
+                  currentPage === item.id ? "bg-primary-navy text-white" : "bg-black/5 text-primary-navy hover:bg-black/10"
                 }`}
               >
                 {item.label}
@@ -143,49 +119,18 @@ export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, log
             ))}
           </div>
 
-          <hr className="border-black/10" />
+          <hr className="border-black/5" />
 
           <div className="flex flex-col gap-3">
-            {user && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-[#FFFDF2] rounded-xl border border-black/10">
-                  <span className="text-sm font-semibold text-black flex items-center gap-1.5">
-                    <User size={16} className="text-black" />
-                    {user.name}
-                  </span>
-                  <button
-                    id="mob-logout-btn"
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-xs text-red-650 font-bold"
-                  >
-                    Logout
-                  </button>
-                </div>
-                <button
-                  id="nav-mob-dash-link"
-                  onClick={() => {
-                    setCurrentPage(isAdmin ? "admin" : "dashboard");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-center py-2.5 bg-black text-[#FFFDF2] rounded-xl text-xs font-bold uppercase tracking-wider"
-                >
-                  {isAdmin ? "Admin Console Control Room" : "Client Portal Dashboard"}
-                </button>
-              </div>
-            )}
-
             <button
               id="nav-mob-cta-btn"
               onClick={() => {
                 openQuote();
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-3 text-[#FFFDF2] text-center bg-black rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-neutral-900"
+              className="w-full py-3 text-white text-center bg-accent-gold hover:bg-accent-gold/90 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md"
             >
-              Get Free Conversion Proposal
+              Book Free Strategy Call
             </button>
           </div>
         </div>

@@ -23,36 +23,48 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
   const [playbookResult, setPlaybookResult] = useState<any | null>(null);
 
   const stats = [
-    { num: "< 3 Sec", label: "Target Page Load Speed" },
-    { num: "100%", label: "Mobile SEO Code Compliance" },
-    { num: "₹0 Upfront", label: "Zero-Risk Retainer Launch" },
-    { num: "7-14 Days", label: "Standard Launch Turnaround" }
+    { num: "120+", label: "Projects Delivered" },
+    { num: "99.8%", label: "Client Satisfaction" },
+    { num: "15+", label: "Industries Served" },
+    { num: "Delhi-NCR", label: "Top-Ranked Local SEO" }
   ];
 
   const highlights = [
     {
-      title: "Clinics & Medical Doctors",
-      desc: "Instant patient scheduling, digitized booking intakes, and localized health HIPAA-ready SEO schema.",
-      icon: "🩺",
-      cta: "Setup Medical booking"
+      title: "AI Website Development",
+      desc: "Intelligent, smart features, personalized pipelines, and integrated Gemini / GPT responsive capabilities.",
+      icon: "🤖",
+      cta: "Configure AI Module"
     },
     {
-      title: "Fitness Gyms & Studios",
-      desc: "Free 3-day pass systems, automated local maps ranking, and immediate SMS lead routing workflows.",
-      icon: "💪",
-      cta: "Boost Gym Signups"
+      title: "Business Websites",
+      desc: "High-end corporate identity, rich SVG vector layouts, and premium interactive brand value markers.",
+      icon: "💼",
+      cta: "Deploy Business Web"
     },
     {
-      title: "Beauty Salons & Spa",
-      desc: "Stylist schedulers, automated dynamic QR booking catalogs, and visual before/after conversion sliders.",
-      icon: "💅",
-      cta: "Configure Salon Widget"
+      title: "Lead Generation Websites",
+      desc: "Architected to turn anonymous clicks into immediate consultation reservations & pipeline entries.",
+      icon: "⚡",
+      cta: "Activate Lead Engine"
     },
     {
-      title: "Bistros & Restaurants",
-      desc: "Digital NFC/QR menu grids, table reservation automation, and dynamic local client dynamic reviews routing.",
-      icon: "🍔",
-      cta: "Boost Dinner Bookings"
+      title: "Website Redesign",
+      desc: "Upgrade slow legacy templates with premium Custom CSS, high-speed loading assets, and Playfair typography.",
+      icon: "🎨",
+      cta: "Initiate Redesign"
+    },
+    {
+      title: "SEO Optimization",
+      desc: "Regional location JSON-LD schema, map positioning, GK-II, Gurugram & Delhi-NCR keywords domination.",
+      icon: "📈",
+      cta: "Launch SEO Campaign"
+    },
+    {
+      title: "Website Maintenance",
+      desc: "60fps animations, robust security shielding, weekly database updates, and live uptime monitoring.",
+      icon: "🛠️",
+      cta: "Secure Maintenance"
     }
   ];
 
@@ -76,9 +88,9 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
   ];
 
   return (
-    <div className="bg-[#FFFDF2] font-sans text-black">
+    <div className="bg-secondary-ivory font-sans text-charcoal">
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-black text-[#FFFDF2] pt-24 pb-20 px-4 sm:px-6 lg:px-8 rounded-b-[2rem] sm:rounded-b-[3rem] shadow-2xl">
+      <section className="relative overflow-hidden bg-primary-navy text-secondary-ivory pt-24 pb-20 px-4 sm:px-6 lg:px-8 rounded-b-[2rem] sm:rounded-b-[3rem] shadow-2xl">
         {/* Ambient Subtle background lighting */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl pointer-events-none -mr-48 -mt-24"></div>
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-neutral-900 rounded-full blur-3xl pointer-events-none -ml-48 -mb-24"></div>
@@ -86,17 +98,17 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Left Brief */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-xs text-[#FFFDF2]/80 font-mono tracking-widest uppercase">
-              <Sparkles size={14} className="text-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-charcoal/80 border border-slate/40 rounded-full text-xs text-secondary-ivory/80 font-mono tracking-widest uppercase">
+              <Sparkles size={14} className="text-accent-gold animate-pulse" />
               ELITE CRO & WEB ARCHITECTS FOR LOCAL LEADERS
             </div>
 
-            <h1 className="font-display font-black text-4xl sm:text-6xl tracking-tight leading-none text-white">
-              We build premium web systems that get your local business <span className="font-serif italic text-emerald-300 underline decoration-emerald-500/50 underline-offset-8">paying clients</span>
+            <h1 className="font-display font-black text-4xl sm:text-6xl tracking-tight leading-tight text-white">
+              Web Experiences That Turn <span className="font-serif italic text-accent-gold underline decoration-accent-gold/40 underline-offset-8">Visitors Into Customers</span>.
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              No generic slow templates or amateur freelancer code. We design ultra-premium, high-conversion custom systems, stylized scheduling modules, WhatsApp CRM pipelines, and dominant Delhi-NCR regional Map SEO. Complete source code ownership.
+              No generic slow templates or amateur freelancer code. We design ultra-premium, high-conversion custom systems, stylized scheduling modules, WhatsApp CRM pipelines, and dominant regional Map SEO. Complete source code ownership.
             </p>
 
             <div className="space-y-3">
@@ -104,19 +116,19 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
                 <button
                   id="hero-primary-cta"
                   onClick={() => openQuote()}
-                  className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] shadow-md cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 bg-accent-gold hover:bg-accent-gold/90 text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] shadow-md cursor-pointer"
                 >
-                  Claim Free CRO & Local SEO Audit
+                  Get Started
                 </button>
                 <button
                   id="hero-secondary-cta"
-                  onClick={() => setCurrentPage("services")}
-                  className="w-full sm:w-auto px-8 py-4 bg-black border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  onClick={() => setCurrentPage("portfolio")}
+                  className="w-full sm:w-auto px-8 py-4 bg-primary-navy border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  Explore Core Services <ArrowRight size={14} />
+                  View Our Work <ArrowRight size={14} />
                 </button>
               </div>
-              <p className="text-[11px] font-mono text-emerald-400/90 text-center lg:text-left tracking-wide">
+              <p className="text-[11px] font-mono text-accent-gold/90 text-center lg:text-left tracking-wide">
                 ⚠️ LIMITED CAPACITY: Only 3 custom blueprint spots remaining for this week.
               </p>
             </div>
@@ -178,43 +190,43 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
       </section>
 
       {/* 2. Client Stats */}
-      <section className="bg-[#FFFDF2] border-y border-black/10 py-10 px-4">
+      <section className="bg-white border-y border-light-gray/60 py-12 px-4 shadow-sm">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, idx) => (
-            <div key={idx} className="text-center md:border-r last:border-0 border-black/10">
-              <div className="font-display font-extrabold text-3xl sm:text-4xl text-black tracking-tight">{stat.num}</div>
-              <div className="text-xs text-neutral-600 font-medium font-sans uppercase mt-1 tracking-wider">{stat.label}</div>
+            <div key={idx} className="text-center md:border-r last:border-0 border-light-gray/60">
+              <div className="font-display font-extrabold text-3xl sm:text-5xl text-primary-navy tracking-tight">{stat.num}</div>
+              <div className="text-xs text-slate font-semibold font-sans uppercase mt-2 tracking-wider">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* 3. Services Sector Target highlights */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-          <span className="text-[10px] font-mono font-bold text-black uppercase tracking-widest bg-black/5 px-3 py-1.5 rounded-full border border-black/10">Tailored SaaS Verticals</span>
-          <h2 className="font-display font-black text-3xl sm:text-5xl tracking-tight text-black leading-tight">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-18 space-y-4">
+          <span className="text-[10px] font-mono font-bold text-primary-navy uppercase tracking-widest bg-accent-gold/10 text-accent-gold px-4.5 py-1.5 rounded-full border border-accent-gold/20">Elite Digital Services</span>
+          <h2 className="font-display font-black text-3xl sm:text-5xl tracking-tight text-primary-navy leading-tight">
             Engineered systems for local business dominance
           </h2>
-          <p className="text-neutral-700 text-sm leading-relaxed">
-            Freelancers write simple code. We configure high-conversion corporate machines designed specifically for the dynamics of your vertical market.
+          <p className="text-slate text-base max-w-2xl mx-auto leading-relaxed">
+            Most agencies deploy generic slow templates that bleed leads. We construct ultra-premium, conversion-optimized machines tailor-made for high-intent business scale.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {highlights.map((hl, index) => (
-            <div key={index} className="bg-[#FFFDF2] border border-black/10 rounded-2xl p-6 hover:shadow-lg hover:border-black/30 transition-all group flex flex-col justify-between">
+            <div key={index} className="bg-white border border-light-gray/60 rounded-2xl p-8 hover:shadow-xl hover:-translate-y-1.5 hover:border-accent-gold/40 transition-all duration-300 group flex flex-col justify-between shadow-sm">
               <div>
-                <div className="w-12 h-12 bg-black/5 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 bg-secondary-ivory border border-accent-gold/20 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-105 transition-transform">
                   {hl.icon}
                 </div>
-                <h4 className="font-display font-bold text-lg text-black mb-2">{hl.title}</h4>
-                <p className="text-xs text-neutral-600 leading-relaxed mb-6">{hl.desc}</p>
+                <h4 className="font-display font-bold text-xl text-primary-navy mb-3">{hl.title}</h4>
+                <p className="text-sm text-slate leading-relaxed mb-8">{hl.desc}</p>
               </div>
 
               <button
                 onClick={() => openQuote(hl.title)}
-                className="w-full py-2.5 bg-black text-[#FFFDF2] hover:bg-neutral-900 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3 bg-primary-navy hover:bg-accent-gold text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
               >
                 {hl.cta} <ArrowUpRight size={14} />
               </button>
@@ -618,9 +630,84 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
       </section>
 
       {/* 4. AI Interactive Custom Core Module */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-black">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary-navy rounded-[2rem] sm:rounded-[3rem] mx-4 sm:mx-6 lg:mx-8 shadow-2xl">
         <div className="max-w-7xl mx-auto">
           <AiBlueprintBuilder />
+        </div>
+      </section>
+
+      {/* Process Timeline - Discover, Design, Develop, Launch, Scale */}
+      <section className="py-24 bg-white border-y border-light-gray/60 px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+            <span className="text-[10px] font-mono font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-4 py-1.5 rounded-full border border-accent-gold/20">The Aura Workflow</span>
+            <h2 className="font-display font-black text-3xl sm:text-5xl text-primary-navy tracking-tight leading-tight">
+              Our 5-Stage Client Success Engine
+            </h2>
+            <p className="text-slate text-base">
+              We operate with rigorous alignment, translating initial business goals into dominant, hand-built production software. Here is how we build your solution:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
+            {/* Visual connector line in desktop */}
+            <div className="hidden md:block absolute top-[40px] left-0 right-0 h-[2px] bg-light-gray/60 -z-0"></div>
+            
+            <div className="bg-secondary-ivory/40 p-6 rounded-2xl border border-light-gray/40 relative group hover:border-accent-gold/40 hover:-translate-y-1 transition-all duration-300 z-10 bg-white">
+              <span className="absolute top-4 right-4 text-3xl sm:text-4xl font-display font-black text-accent-gold/10 select-none group-hover:text-accent-gold/20 transition-colors">01</span>
+              <div className="w-12 h-12 bg-primary-navy text-white rounded-xl flex items-center justify-center font-bold text-sm mb-4">
+                DSC
+              </div>
+              <h4 className="font-display font-bold text-lg text-primary-navy mb-2">Discover</h4>
+              <p className="text-xs text-slate leading-relaxed">
+                Deep-dive vertical auditing and local search coordinate mapping to locate conversion avenues.
+              </p>
+            </div>
+
+            <div className="bg-secondary-ivory/40 p-6 rounded-2xl border border-light-gray/40 relative group hover:border-accent-gold/40 hover:-translate-y-1 transition-all duration-300 z-10 bg-white">
+              <span className="absolute top-4 right-4 text-3xl sm:text-4xl font-display font-black text-accent-gold/10 select-none group-hover:text-accent-gold/20 transition-colors">02</span>
+              <div className="w-12 h-12 bg-primary-navy text-white rounded-xl flex items-center justify-center font-bold text-sm mb-4">
+                DSN
+              </div>
+              <h4 className="font-display font-bold text-lg text-primary-navy mb-2">Design</h4>
+              <p className="text-xs text-slate leading-relaxed">
+                Playfair typography pairing, structural layout framing, and conversion-focused customer journeys.
+              </p>
+            </div>
+
+            <div className="bg-secondary-ivory/40 p-6 rounded-2xl border border-light-gray/40 relative group hover:border-accent-gold/40 hover:-translate-y-1 transition-all duration-300 z-10 bg-white">
+              <span className="absolute top-4 right-4 text-3xl sm:text-4xl font-display font-black text-accent-gold/10 select-none group-hover:text-accent-gold/20 transition-colors">03</span>
+              <div className="w-12 h-12 bg-primary-navy text-white rounded-xl flex items-center justify-center font-bold text-sm mb-4">
+                DEV
+              </div>
+              <h4 className="font-display font-bold text-lg text-primary-navy mb-2">Develop</h4>
+              <p className="text-xs text-slate leading-relaxed">
+                Lightweight, custom coded interfaces, secure client dashboard state engines, and clean components.
+              </p>
+            </div>
+
+            <div className="bg-secondary-ivory/40 p-6 rounded-2xl border border-light-gray/40 relative group hover:border-accent-gold/40 hover:-translate-y-1 transition-all duration-300 z-10 bg-white">
+              <span className="absolute top-4 right-4 text-3xl sm:text-4xl font-display font-black text-accent-gold/10 select-none group-hover:text-accent-gold/20 transition-colors">04</span>
+              <div className="w-12 h-12 bg-primary-navy text-white rounded-xl flex items-center justify-center font-bold text-sm mb-4">
+                LCH
+              </div>
+              <h4 className="font-display font-bold text-lg text-primary-navy mb-2">Launch</h4>
+              <p className="text-xs text-slate leading-relaxed">
+                Google Map pinning, structured regional schema indexing, and blazing fast production server deployment.
+              </p>
+            </div>
+
+            <div className="bg-secondary-ivory/40 p-6 rounded-2xl border border-light-gray/40 relative group hover:border-accent-gold/40 hover:-translate-y-1 transition-all duration-300 z-10 bg-white">
+              <span className="absolute top-4 right-4 text-3xl sm:text-4xl font-display font-black text-accent-gold/10 select-none group-hover:text-accent-gold/20 transition-colors">05</span>
+              <div className="w-12 h-12 bg-primary-navy text-white rounded-xl flex items-center justify-center font-bold text-sm mb-4">
+                SCL
+              </div>
+              <h4 className="font-display font-bold text-lg text-primary-navy mb-2">Scale</h4>
+              <p className="text-xs text-slate leading-relaxed">
+                Ongoing lead data capturing, automation optimization, priority support, and conversion adjustments.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
