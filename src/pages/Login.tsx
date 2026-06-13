@@ -21,11 +21,12 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
   const [password, setPassword] = useState("");
 
   // 2FA login/setup screens
-  const [twoFactorState, setTwoFactorState] = useState<"none" | "setup" | "verify">("none");
+  const [twoFactorState, setTwoFactorState] = useState<"none" | "setup" | "verify" | "waiting">("none");
   const [twoFactorSecret, setTwoFactorSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [devTotp, setDevTotp] = useState("");
+  const [countdownTime, setCountdownTime] = useState(120);
 
   // Secure Password Reset steps
   const [resetTokenInput, setResetTokenInput] = useState("");
@@ -52,6 +53,37 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       setSuccessBannerMsg("Passcode recovery link recognized! Please config your new credentials matching enterprise complexity.");
     }
 
+    const codeParam = params.get("otp") || params.get("code");
+    if (codeParam && mail) {
+      setEmail(mail);
+      setTotpCode(codeParam);
+      const autoVerify = async () => {
+        setLoading(true);
+        setErrorMsg("");
+        try {
+          const response = await fetch("/api/auth/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: mail.trim(), code: codeParam })
+          });
+          const data = await response.json();
+          if (response.ok && data.success) {
+            localStorage.setItem("aura_admin_token", data.token);
+            localStorage.setItem("aura_user_role", data.user.role || "Staff");
+            onLoginSuccess(data.user, data.isAdmin);
+            setCurrentPage(data.isAdmin ? "admin" : "dashboard");
+          } else {
+            setErrorMsg(data.error || "Auto-verification link has expired.");
+          }
+        } catch (e) {
+          setErrorMsg("Automatic security verification failed. Please insert credentials.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      autoVerify();
+    }
+
     // Remember Me check
     const savedEmail = localStorage.getItem("aura_remember_email");
     if (savedEmail) {
@@ -59,6 +91,22 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    let timer: any;
+    if (twoFactorState === "waiting" && countdownTime > 0) {
+      timer = setInterval(() => {
+        setCountdownTime((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [twoFactorState, countdownTime]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   const handleCopySecret = () => {
     navigator.clipboard.writeText(twoFactorSecret);
@@ -112,10 +160,11 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       setCaptchaAnswer("");
 
       if (data.requireTwoFactor) {
-        // Step 2 Verification needed
-        setTwoFactorState("verify");
+        // Step 2 Verification needed: Transition to wait screen first as mandated by SOW
+        setTwoFactorState("waiting");
         setDevTotp(data.devTotp || "");
         setSuccessBannerMsg(data.message);
+        setCountdownTime(120); // reset countdown timer to 2 minutes
       } else if (data.requireTwoFactorSetup) {
         // First-time administrator 2FA setup forced
         setTwoFactorState("setup");
@@ -242,10 +291,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         setSuccessBannerMsg(data.message);
         if (data.devToken) {
           setResetTokenInput(data.devToken);
-          // Auto fill form to help local review sandbox
-          setTimeout(() => {
-            alert(`[SANDBOX TEST HELPER] Secure Recovery Token generated for local review: ${data.devToken}. Form fields prepopulated.`);
-          }, 300);
+          // Zero-popup compliance: we save the devToken for immediate offline sandbox assistance, but show no modal popups or alert blocks
         }
       } else {
         setErrorMsg(data.error || "Failed resetting passcode.");
@@ -340,14 +386,72 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         {/* Dynamic authenticators container */}
         <AnimatePresence mode="wait">
           {twoFactorState !== "none" ? (
-            <motion.form
-              key="totpform"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onSubmit={handleVerifyOtp}
-              className="space-y-5"
-            >
+            twoFactorState === "waiting" ? (
+              <motion.div
+                key="waiting"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="space-y-6 text-center"
+              >
+                <div className="w-16 h-16 bg-slate-900/60 border border-[#66fcf1]/30 rounded-full flex items-center justify-center mx-auto shadow-lg text-[#66fcf1] animate-pulse">
+                  <KeyRound size={28} />
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-sans font-bold text-lg text-white">Secure Authorization Pending</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+                    Please check your registered professional email address. We have dispatched a dynamic, single-use authentication key to:
+                  </p>
+                  <p className="font-mono text-xs text-[#66fcf1] bg-slate-950/80 px-3 py-1.5 rounded-lg inline-block font-bold">
+                    {email}
+                  </p>
+                </div>
+
+                {/* Countdown Timer */}
+                <div className="bg-slate-950 border border-slate-900 inline-block px-4 py-2.5 rounded-xl">
+                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Time Remaining</span>
+                  <span className="text-xl font-mono font-black text-amber-500 tracking-wider">
+                    {formatTime(countdownTime)}
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <p className="text-[10px] text-slate-500 font-mono italic">
+                    A secure, non-popup OTP verification protocol is active.
+                  </p>
+
+                  <button
+                    type="button"
+                    id="enter-sec-code-btn"
+                    onClick={() => setTwoFactorState("verify")}
+                    className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-[#66fcf1] border border-[#66fcf1]/20 hover:border-[#66fcf1]/40 rounded-xl transition-all uppercase tracking-wider block cursor-pointer"
+                  >
+                    Enter Verification Key (Manual)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTwoFactorState("none");
+                      setTotpCode("");
+                      setSuccessBannerMsg("");
+                    }}
+                    className="text-[10px] text-slate-500 hover:text-slate-300 font-mono uppercase tracking-wider block mx-auto underline mt-2 bg-transparent border-none cursor-pointer"
+                  >
+                    Go Back to Username Login
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.form
+                key="totpform"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onSubmit={handleVerifyOtp}
+                className="space-y-5"
+              >
               {twoFactorState === "setup" && (
                 <div className="space-y-4 bg-slate-900/60 border border-slate-800 p-4 rounded-2xl text-center">
                   <p className="text-xs text-slate-300 leading-relaxed">
@@ -456,7 +560,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
               >
                 Go Back to Username Login
               </button>
-            </motion.form>
+            </motion.form>)
           ) : formType === "signin" ? (
             <motion.form
               key="signin"

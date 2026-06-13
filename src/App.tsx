@@ -177,7 +177,7 @@ export default function App() {
       </main>
 
       {/* 4. Bottom presentational Footer directories and JSON schema */}
-      <Footer setCurrentPage={setCurrentPage} />
+      <Footer setCurrentPage={setCurrentPage} currentPage={currentPage} />
 
       {/* 5. Persistent CRO elements widgets */}
       <FloatingWhatsApp />

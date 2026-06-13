@@ -1697,6 +1697,36 @@ app.post("/api/auth/verify-otp", async (req, res) => {
   });
 });
 
+// VERIFY SYSTEM AGENT ADMIN SERVICE
+app.post("/api/auth/verify-admin", (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(201).json({ success: false, isAdmin: false, error: "Access token is required." });
+    }
+    const token = authHeader.split(" ")[1];
+    const session = activeSessions[token];
+    if (!session) {
+      return res.status(201).json({ success: false, isAdmin: false, error: "Session has expired or is invalid." });
+    }
+
+    // 30 Minutes Inactivity Auto-Logout refresh
+    const now = Date.now();
+    const thirtyMin = 30 * 60 * 1000;
+    if (now - session.lastSeen > thirtyMin) {
+      delete activeSessions[token];
+      return res.status(201).json({ success: false, isAdmin: false, error: "Session expired due to inactivity." });
+    }
+    session.lastSeen = now;
+
+    const isAdmin = ["Super Admin", "Admin", "Staff"].includes(session.role);
+    return res.json({ success: true, isAdmin });
+  } catch (error) {
+    console.error("verify-admin execution error:", error);
+    return res.status(500).json({ error: "A temporary connectivity issue has occurred. Please try again." });
+  }
+});
+
 // PASSWORD RECOVERY REQUEST
 app.post("/api/auth/forgot-password", async (req, res) => {
   const { email } = req.body;
