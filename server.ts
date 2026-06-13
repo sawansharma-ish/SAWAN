@@ -11,9 +11,36 @@ import { createClient } from "@supabase/supabase-js";
 dns.setDefaultResultOrder("ipv4first");
 
 // Initialize Supabase Client
-const supabaseUrl = process.env.SUPABASE_URL || "https://yoiuspliqldjctosqleb.supabase.co";
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "sb_publishable_qmX_PFO2sijgSOGkEKFY1Q_6Re3LKKV";
-console.log(`[Supabase Init] Connecting to project ${supabaseUrl}...`);
+let rawSupabaseUrl = (process.env.SUPABASE_URL || "").trim();
+// Strip any surrounding quote characters from environment variables
+if (rawSupabaseUrl.startsWith('"') && rawSupabaseUrl.endsWith('"')) {
+  rawSupabaseUrl = rawSupabaseUrl.slice(1, -1).trim();
+}
+if (rawSupabaseUrl.startsWith("'") && rawSupabaseUrl.endsWith("'")) {
+  rawSupabaseUrl = rawSupabaseUrl.slice(1, -1).trim();
+}
+
+let supabaseUrl = rawSupabaseUrl;
+if (!supabaseUrl || !/^https?:\/\//i.test(supabaseUrl) || supabaseUrl.includes("YOUR_") || supabaseUrl.includes("MY_")) {
+  console.warn(`[Supabase Init Warning] Invalid or missing SUPABASE_URL: "${process.env.SUPABASE_URL}". Falling back to default secure URL.`);
+  supabaseUrl = "https://yoiuspliqldjctosqleb.supabase.co";
+}
+
+let rawSupabaseAnonKey = (process.env.SUPABASE_ANON_KEY || "").trim();
+if (rawSupabaseAnonKey.startsWith('"') && rawSupabaseAnonKey.endsWith('"')) {
+  rawSupabaseAnonKey = rawSupabaseAnonKey.slice(1, -1).trim();
+}
+if (rawSupabaseAnonKey.startsWith("'") && rawSupabaseAnonKey.endsWith("'")) {
+  rawSupabaseAnonKey = rawSupabaseAnonKey.slice(1, -1).trim();
+}
+
+let supabaseAnonKey = rawSupabaseAnonKey;
+if (!supabaseAnonKey || supabaseAnonKey.includes("YOUR_") || supabaseAnonKey.includes("MY_") || supabaseAnonKey.length < 15) {
+  console.warn(`[Supabase Init Warning] Invalid or missing SUPABASE_ANON_KEY. Falling back to default backup key.`);
+  supabaseAnonKey = "sb_publishable_qmX_PFO2sijgSOGkEKFY1Q_6Re3LKKV";
+}
+
+console.log(`[Supabase Init] Connecting to project "${supabaseUrl}"...`);
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Helper to safely write to Supabase (non-blocking)
