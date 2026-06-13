@@ -21,6 +21,13 @@ if (rawSupabaseUrl.startsWith("'") && rawSupabaseUrl.endsWith("'")) {
 }
 
 let supabaseUrl = rawSupabaseUrl;
+
+// Automatically parse and reconstruct clean secure URL if a raw project ID is provided
+if (supabaseUrl && !supabaseUrl.includes("/") && !supabaseUrl.includes(".") && !supabaseUrl.includes("YOUR_") && !supabaseUrl.includes("MY_")) {
+  console.log(`[Supabase Init] Detected raw Supabase Project ID "${supabaseUrl}". Reconstructing secure URL.`);
+  supabaseUrl = `https://${supabaseUrl}.supabase.co`;
+}
+
 if (!supabaseUrl || !/^https?:\/\//i.test(supabaseUrl) || supabaseUrl.includes("YOUR_") || supabaseUrl.includes("MY_")) {
   console.warn(`[Supabase Init Warning] Invalid or missing SUPABASE_URL: "${process.env.SUPABASE_URL}". Falling back to default secure URL.`);
   supabaseUrl = "https://yoiuspliqldjctosqleb.supabase.co";
@@ -223,7 +230,7 @@ interface WhatsAppQueueItem {
   };
   retryCount: number;
   errorLog?: string;
-  status: "pending" | "failed" | "sent";
+  status: "pending" | "failed" | "sent" | "skipped";
   timestamp: string;
 }
 
@@ -1138,17 +1145,30 @@ async function triggerWhatsAppAlert(enquiry: Enquiry) {
     let success = false;
     let lastError = "";
 
+    const token = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_API_KEY;
+    const phoneId = process.env.WHATSAPP_PHONE_ID;
+
+    if (!token) {
+      console.log(`[WhatsApp Sync] Auto-alert skipped. Configure WHATSAPP_ACCESS_TOKEN inside environment settings.`);
+      try {
+        const currentDb = readDB();
+        const match = currentDb.whatsappQueue.find(q => q.id === queueItem.id);
+        if (match) {
+          match.retryCount = 0;
+          match.status = "skipped";
+          match.errorLog = "WhatsApp API keys not configured in environment settings.";
+          writeDB(currentDb);
+        }
+      } catch (saveError) {
+        console.error("Failed to commit skipped WhatsApp status to database:", saveError);
+      }
+      return;
+    }
+
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         console.log(`[WhatsApp Alert] Sending item ${queueItem.id} to ${enquiry.full_name} (Attempt ${attempt}/3)`);
         
-        const token = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_API_KEY;
-        const phoneId = process.env.WHATSAPP_PHONE_ID;
-
-        if (!token) {
-          throw new Error("No WHATSAPP_ACCESS_TOKEN or WHATSAPP_API_KEY configured in environment settings (.env.example).");
-        }
-
         const response = await fetch(`https://graph.facebook.com/v17.0/${phoneId || "default"}/messages`, {
           method: "POST",
           headers: {
