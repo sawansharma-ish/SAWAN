@@ -1,5 +1,5 @@
-import React from "react";
-import { Sparkles, Phone, Mail, MapPin, ExternalLink, Shield } from "lucide-react";
+import React, { useState } from "react";
+import { Sparkles, Phone, Mail, MapPin, ExternalLink, Shield, X } from "lucide-react";
 import { Logo } from "./Logo";
 
 interface FooterProps {
@@ -7,6 +7,9 @@ interface FooterProps {
 }
 
 export default function Footer({ setCurrentPage }: FooterProps) {
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
@@ -118,13 +121,25 @@ export default function Footer({ setCurrentPage }: FooterProps) {
 
             <hr className="border-neutral-900 my-2" />
 
-            <div className="flex gap-4 text-xs font-mono text-slate-400">
+            <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400">
               <a href="/sitemap.xml" target="_blank" className="hover:text-white flex items-center gap-1">
                 Sitemap.xml <ExternalLink size={10} />
               </a>
               <a href="/robots.txt" target="_blank" className="hover:text-white flex items-center gap-1">
                 Robots.txt <ExternalLink size={10} />
               </a>
+              <button 
+                onClick={() => setShowPrivacy(true)} 
+                className="hover:text-white transition-colors cursor-pointer bg-transparent text-left"
+              >
+                Privacy Policy
+              </button>
+              <button 
+                onClick={() => setShowTerms(true)} 
+                className="hover:text-white transition-colors cursor-pointer bg-transparent text-left"
+              >
+                Terms of Service
+              </button>
             </div>
           </div>
         </div>
@@ -140,6 +155,132 @@ export default function Footer({ setCurrentPage }: FooterProps) {
           </div>
         </div>
       </div>
+
+      {/* PRIVACY POLICY MODAL */}
+      {showPrivacy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in text-[#FFFDF2]">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto space-y-5 animate-scale-up">
+            <button 
+              onClick={() => setShowPrivacy(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold text-accent-gold tracking-widest uppercase">REGULATORY PROTOCOL</span>
+              <h3 className="font-display font-extrabold text-2xl text-white">Privacy Policy</h3>
+              <p className="text-[10px] text-slate-500 font-mono font-bold">UPDATED: JUNE 13, 2026 | AURA WEB PRIVATE CLIENT PROTECTION</p>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-350 leading-relaxed font-sans text-justify">
+              <p>
+                At <strong>Aura Web Inc.</strong>, we maintain institutional-grade security protocols for all private inquiries, marketing analysis configurations, and customer database logs. This document defines how we handle data captures safely.
+              </p>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">1. Information We Collect</h4>
+                <p>
+                  We only document contact indices entered directly by human action through our <strong>Contact Form</strong>, <strong>Cyber-Blueprint Engine Co-ordinator</strong>, and <strong>Interactive Playbook Generators</strong>. This is restricted strictly to details you supply (Your Name, Contact Phone/WhatsApp, Email Address, and Business Segment specifications).
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">2. Secure Persistence & Sync</h4>
+                <p>
+                  Data transmissions are encrypted. If the API is offline or experiences heavy traffic, records fallback to <strong>secured client-side local cache storage</strong> inside your browser window. No third party ever receives access to your communication logs or telemetry data.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">3. Cookie & Analytical Logging</h4>
+                <p>
+                  To continuous-audit local pack rankings and page speed benchmarks, our custom analytics engine records basic diagnostic markers (general device category, referral host, landing path, and average session times). No persistent trackers or third-party cookies are used.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">4. Rights and Purging Contacts</h4>
+                <p>
+                  You hold full command over your logs. To request a permanent structural purge of your contact index or submitted requirements, transmit a command to our Lead Architect at <a href="mailto:sawanforwork@gmail.com" className="text-accent-gold underline">sawanforwork@gmail.com</a>. Clearances are audited within 24 hours.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-900">
+              <button 
+                onClick={() => setShowPrivacy(false)}
+                className="w-full py-2.5 bg-accent-gold text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-accent-gold/90 transition-colors cursor-pointer"
+              >
+                Dismiss Secure Policy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TERMS OF SERVICE MODAL */}
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in text-[#FFFDF2]">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 relative max-h-[85vh] overflow-y-auto space-y-5 animate-scale-up">
+            <button 
+              onClick={() => setShowTerms(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold text-accent-gold tracking-widest uppercase">AGENCY CHARTERS UNIT</span>
+              <h3 className="font-display font-extrabold text-2xl text-white">Terms of Service</h3>
+              <p className="text-[10px] text-slate-500 font-mono font-bold">POLICIES IN REGIONAL INDIAN METROPOLITAN MARKETS</p>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-350 leading-relaxed font-sans text-justify">
+              <p>
+                By employing our digital dominance configurations, automated blueprint estimators, or booking custom strategy calls, you assent strictly to the following parameters.
+              </p>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">1. Deliverables Mapped to Blueprints</h4>
+                <p>
+                  Any digital recommendation, custom checklist, or pricing layout displayed are optimized local benchmarks tailored for South Delhi, Gurugram, Mumbai, and regional Indian hubs. Final physical agreements and exact timeline terms are finalized explicitly via direct contract documents.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">2. Client Responsibilities</h4>
+                <p>
+                  Clients agree to provide accurate segment metrics, logo resources, and local business coordinates in good faith for any design redesign or SEO campaign optimization.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">3. Code Ownership & Hosting Rights</h4>
+                <p>
+                  Unless specified otherwise, our high-ROI architectures are built hand-coded with zero locked proprietary software retainers. Complete full-stack ownership is transferred to the buyer immediately upon final payment settlement.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-sm text-white mb-1.5">4. Disputes or Revisions</h4>
+                <p>
+                  For rapid support on active web maintenance profiles or to update physical business parameters on Google maps configurations, contact our chambers via phone at +91 89297 57028.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-900">
+              <button 
+                onClick={() => setShowTerms(false)}
+                className="w-full py-2.5 bg-accent-gold text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-accent-gold/90 transition-colors cursor-pointer"
+              >
+                Acknowledge Agency Terms
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 }
