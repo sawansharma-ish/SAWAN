@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Logo } from "../components/Logo";
 
 interface LoginProps {
-  onLoginSuccess: (user: any, isAdmin: boolean) => void;
+  onLoginSuccess: (user: any) => void;
   setCurrentPage: (page: string) => void;
 }
 
@@ -70,8 +70,8 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
           if (response.ok && data.success) {
             localStorage.setItem("aura_admin_token", data.token);
             localStorage.setItem("aura_user_role", data.user.role || "Staff");
-            onLoginSuccess(data.user, data.isAdmin);
-            setCurrentPage(data.isAdmin ? "admin" : "dashboard");
+            onLoginSuccess(data.user);
+            setCurrentPage("dashboard");
           } else {
             setErrorMsg(data.error || "Auto-verification link has expired.");
           }
@@ -176,7 +176,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
         // Standard client login instant resolution
         localStorage.setItem("aura_admin_token", data.token);
         localStorage.setItem("aura_user_role", data.user.role || "Client");
-        onLoginSuccess(data.user, false);
+        onLoginSuccess(data.user);
         setCurrentPage("dashboard");
       }
     } catch (err) {
@@ -207,8 +207,8 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       if (response.ok && data.success) {
         localStorage.setItem("aura_admin_token", data.token);
         localStorage.setItem("aura_user_role", data.user.role || "Staff");
-        onLoginSuccess(data.user, data.isAdmin);
-        setCurrentPage(data.isAdmin ? "admin" : "dashboard");
+        onLoginSuccess(data.user);
+        setCurrentPage("dashboard");
       } else {
         setErrorMsg(data.error || "Incorrect 2FA verification code. Check clock sync and retry.");
       }
@@ -258,7 +258,7 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        onLoginSuccess(data.user, false);
+        onLoginSuccess(data.user);
         setCurrentPage("dashboard");
       } else {
         setErrorMsg(data.error || "Registration rejected. Duplicate catalog emails trace.");
@@ -684,27 +684,6 @@ export default function Login({ onLoginSuccess, setCurrentPage }: LoginProps) {
                 </button>
               </div>
 
-              <div className="pt-4 border-t border-slate-900 mt-4 space-y-2.5">
-                <div className="p-3.5 bg-slate-950/85 border border-[#1f2833] rounded-xl space-y-2 text-left">
-                  <p className="text-[10px] text-[#66fcf1] font-mono uppercase tracking-widest font-bold flex items-center gap-1.5">
-                    <KeyRound size={11} /> Administrative Access Portal
-                  </p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Sawan Sharma's account is seeded as Super Admin. Click below to load administrator credentials into the gateway.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("sawanforwork@gmail.com");
-                      setPassword("password");
-                      setSuccessBannerMsg("Admin credentials loaded successfully! Click the 'Sign In to Portal' button above.");
-                    }}
-                    className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-xs text-[#66fcf1] border border-[#66fcf1]/20 hover:border-[#66fcf1]/40 rounded-lg font-mono font-bold transition-all uppercase tracking-wider text-center cursor-pointer"
-                  >
-                    ⚡ Auto-Fill Admin Credentials
-                  </button>
-                </div>
-              </div>
             </motion.form>
           ) : formType === "signup" ? (
             <motion.form

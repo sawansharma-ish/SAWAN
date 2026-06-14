@@ -11,36 +11,7 @@ export default function Footer({ setCurrentPage, currentPage }: FooterProps) {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
-  const handleAdminAccessClick = async () => {
-    const token = localStorage.getItem("aura_admin_token");
-    const role = localStorage.getItem("aura_user_role");
-    const isAdminRole = ["Admin", "Super Admin", "Staff"].includes(role || "");
-
-    if (!token || !isAdminRole) {
-      setCurrentPage("login");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/auth/verify-admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.isAdmin) {
-          setCurrentPage("admin");
-          return;
-        }
-      }
-      setCurrentPage("login");
-    } catch (err) {
-      setCurrentPage("login");
-    }
-  };
+  // PRIVACY POLICY MODAL
 
   const localBusinessSchema = {
     "@context": "https://schema.org",
@@ -172,15 +143,6 @@ export default function Footer({ setCurrentPage, currentPage }: FooterProps) {
               >
                 Terms of Service
               </button>
-              {!["admin", "dashboard"].includes(currentPage || "") && (
-                <button 
-                  id="only-admin-access-btn"
-                  onClick={handleAdminAccessClick} 
-                  className="text-amber-500 hover:text-amber-400 transition-colors cursor-pointer bg-transparent text-left font-bold"
-                >
-                  only admin access
-                </button>
-              )}
             </div>
           </div>
         </div>

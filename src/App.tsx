@@ -15,7 +15,6 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
@@ -23,14 +22,13 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(() => {
     // Parse path on initial load for SEO-perfect deep linking
     const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin", "privacy", "terms"];
+    const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "privacy", "terms"];
     if (validPages.includes(path)) {
       return path;
     }
     return "home";
   });
   const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Quote popup trigger
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
@@ -45,14 +43,12 @@ export default function App() {
     setIsQuoteOpen(true);
   };
 
-  const handleLoginSuccess = (userProfile: any, adminRole: boolean) => {
+  const handleLoginSuccess = (userProfile: any) => {
     setUser(userProfile);
-    setIsAdmin(adminRole);
   };
 
   const handleLogout = () => {
     setUser(null);
-    setIsAdmin(false);
     setCurrentPage("home");
   };
 
@@ -65,7 +61,7 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "admin", "privacy", "terms"];
+      const validPages = ["services", "portfolio", "pricing", "about", "blog", "contact", "login", "dashboard", "privacy", "terms"];
       if (path && validPages.includes(path)) {
         setCurrentPage(path);
       } else {
@@ -108,7 +104,6 @@ export default function App() {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         user={user}
-        isAdmin={isAdmin}
         logout={handleLogout}
         openQuote={handleOpenQuote}
       />
@@ -165,13 +160,6 @@ export default function App() {
           <ClientDashboard
             user={user}
             onUpdateProfile={handleUpdateProfile}
-          />
-        )}
-
-        {currentPage === "admin" && (
-          <AdminDashboard
-            user={user}
-            onLogout={handleLogout}
           />
         )}
       </main>

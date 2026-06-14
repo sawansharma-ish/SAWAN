@@ -6,12 +6,11 @@ interface NavbarProps {
   currentPage: string;
   setCurrentPage: (page: string) => void;
   user: any;
-  isAdmin: boolean;
   logout: () => void;
   openQuote: (service?: string) => void;
 }
 
-export default function Navbar({ currentPage, setCurrentPage, user, isAdmin, logout, openQuote }: NavbarProps) {
+export default function Navbar({ currentPage, setCurrentPage, user, logout, openQuote }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Hidden admin access from main visitor list as requested!
