@@ -2772,7 +2772,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// Skip starting the server and static middlewares if running inside Vercel Serverless environment
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export { app };
 export default app;
