@@ -54,7 +54,17 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 async function saveToSupabase(tableName: string, data: any) {
   try {
     console.log(`[Supabase] Attempting to save record to ${tableName}...`);
-    const { data: result, error } = await supabase.from(tableName).insert([data]);
+    let payload = { ...data };
+    let { data: result, error } = await supabase.from(tableName).insert([payload]);
+
+    // Fallback: If "user_agent" column does not exist in the database table schema, retry without it
+    if (error && error.message && error.message.includes("user_agent") && payload.user_agent !== undefined) {
+      console.warn(`[Supabase Warning] Table "${tableName}" does not support "user_agent" column. Stripping and retrying.`);
+      delete payload.user_agent;
+      const retryResult = await supabase.from(tableName).insert([payload]);
+      error = retryResult.error;
+    }
+
     if (error) {
       console.warn(`[Supabase Warning] Failed to insert to table "${tableName}". Detail:`, error.message);
       console.warn(`💡 Tip: Ensure table "${tableName}" exists with RLS configured in your Supabase project "${supabaseUrl}".`);
@@ -1517,6 +1527,9 @@ app.post("/api/auth/login", async (req, res) => {
 
     const emailBodyText = `Hello,\n\nA login request was initiated for your administrator account.\n\nYour 6-digit secure login verification OTP is:\n${numericOtp}\n\nThis OTP is active for 5 minutes. If you did not request this, please secure your credentials immediately.`;
 
+    // ALWAYS log OTP to development server logs for instant fallback/troubleshooting
+    console.log(`\n🔑 [MFA Security OTP] Generated login verification code for "${lowerEmail}": ${numericOtp} (expires in 5 minutes)\n`);
+
     if (smtpUser && smtpPass) {
       try {
         const transporter = nodemailer.createTransport({
@@ -1534,9 +1547,13 @@ app.post("/api/auth/login", async (req, res) => {
           text: emailBodyText
         });
         dispatched = true;
-      } catch (mailErr) {
-        console.error("Failed sending OTP email:", mailErr);
+        console.log(`[SMTP Success] Verification OTP email dispatched successfully to ${lowerEmail}.`);
+      } catch (mailErr: any) {
+        console.error("Failed sending OTP email:", mailErr.message || mailErr);
+        console.warn(`💡 [SMTP Troubleshooting] Could not dispatch email via host "${host}". Please make sure your SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS are correctly configured in your environment.`);
       }
+    } else {
+      console.log(`[SMTP Status] SMTP environment variables are not configured. Staging console-only fallback.`);
     }
 
     // Write audit log trail to Supabase
