@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "destination": "/api"
     },
     {
       "source": "/sitemap.xml",
@@ -15,7 +15,7 @@
       "destination": "/robots.txt"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api|assets|favicon|robots\\.txt|sitemap\\.xml).*)/?",
       "destination": "/index.html"
     }
   ]
