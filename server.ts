@@ -4,11 +4,7 @@ import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
 import dns from "dns";
 import nodemailer from "nodemailer";
-<<<<<<< Updated upstream
 import { createClient } from "@supabase/supabase-js";
-=======
-import axios from "axios";
->>>>>>> Stashed changes
 
 // Ensure DNS works smoothly
 dns.setDefaultResultOrder("ipv4first");
@@ -990,63 +986,6 @@ function writeDB(db: DB) {
     fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf8");
   } catch (err) {
     console.error("DB writing error:", err);
-  }
-}
-
-// Notification configuration from environment
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || process.env.SMTP_USER;
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-
-const CALMEBOT_URL = process.env.CALMEBOT_URL; // e.g. https://api.calmebot.com/send
-const CALMEBOT_TOKEN = process.env.CALMEBOT_TOKEN; // bearer token or API key depending on Calmebot
-const CALMEBOT_TO = process.env.CALMEBOT_TO; // recipient WhatsApp number in international format
-
-async function sendNotifications(opts: { subject: string; text: string; whatsappText?: string; phone?: string }) {
-  const { subject, text, whatsappText } = opts;
-
-  // Send email if SMTP configured
-  if (SMTP_USER && SMTP_PASS && NOTIFY_EMAIL) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: SMTP_HOST || "smtp.gmail.com",
-        port: SMTP_PORT,
-        secure: SMTP_PORT === 465,
-        auth: { user: SMTP_USER, pass: SMTP_PASS }
-      });
-
-      await transporter.sendMail({
-        from: SMTP_USER,
-        to: NOTIFY_EMAIL,
-        subject,
-        text,
-        html: `<pre style="font-family:monospace">${text}</pre>`
-      });
-      console.log("Notification email sent to", NOTIFY_EMAIL);
-    } catch (err) {
-      console.error("Failed to send notification email:", err);
-    }
-  } else {
-    console.log("SMTP not configured; skipping email notification.");
-  }
-
-  // Send WhatsApp via Calmebot if configured
-  if (CALMEBOT_URL && CALMEBOT_TOKEN && CALMEBOT_TO && whatsappText) {
-    try {
-      // Calmebot may accept a POST JSON payload with recipient and message. Adjust if your Calmebot uses a different shape.
-      await axios.post(
-        CALMEBOT_URL,
-        { to: CALMEBOT_TO, message: whatsappText },
-        { headers: { Authorization: `Bearer ${CALMEBOT_TOKEN}`, "Content-Type": "application/json" } }
-      );
-      console.log("WhatsApp notification sent via Calmebot to", CALMEBOT_TO);
-    } catch (err) {
-      console.error("Failed to send Calmebot WhatsApp message:", err?.response?.data || err.message || err);
-    }
-  } else {
-    console.log("Calmebot not configured; skipping WhatsApp notification.");
   }
 }
 
@@ -2036,7 +1975,6 @@ app.post("/api/leads", (req, res) => {
   db.enquiries.push(newEnquiry);
   writeDB(db);
 
-<<<<<<< Updated upstream
   // Safely write to Supabase
   saveToSupabase("leads", newLead);
 
@@ -2047,13 +1985,6 @@ app.post("/api/leads", (req, res) => {
     success: true,
     message: "Enquiry successfully stored! Our support directors will call you on WhatsApp within 2 hours."
   });
-=======
-  // Trigger notifications (email + WhatsApp via Calmebot) asynchronously
-  const leadNotice = `New Lead Received\nName: ${newLead.name}\nPhone: ${newLead.phone}\nEmail: ${newLead.email}\nBusiness: ${newLead.businessName}\nService: ${newLead.service}\nBudget: ${newLead.budget}\nMessage: ${newLead.message}\nTimestamp: ${newLead.timestamp}`;
-  sendNotifications({ subject: `New Lead: ${newLead.name}`, text: leadNotice, whatsappText: leadNotice, phone: newLead.phone }).catch(err => console.error(err));
-
-  res.status(201).json({ success: true, message: "Lead captured! Our automation experts will call you within 2 business hours." });
->>>>>>> Stashed changes
 });
 
 // PUBLIC CONTACT FORM INTAKE
@@ -2094,7 +2025,6 @@ app.post("/api/contact", (req, res) => {
   db.enquiries.push(newEnquiry);
   writeDB(db);
 
-<<<<<<< Updated upstream
   saveToSupabase("inquiries", newInq);
 
   // Trigger WhatsApp delivery
@@ -2486,13 +2416,6 @@ app.post("/api/pricing/track", (req, res) => {
   }
   writeDB(db);
   res.json({ success: true });
-=======
-  // Trigger notifications (email + WhatsApp via Calmebot) asynchronously
-  const inqNotice = `New Inquiry Received\nName: ${newInq.name}\nPhone: ${newInq.phone}\nEmail: ${newInq.email}\nMessage: ${newInq.message}\nTimestamp: ${newInq.timestamp}`;
-  sendNotifications({ subject: `New Inquiry: ${newInq.name}`, text: inqNotice, whatsappText: inqNotice, phone: newInq.phone }).catch(err => console.error(err));
-
-  res.status(201).json({ success: true, message: "Inquiry successfully submitted. An architect has been assigned." });
->>>>>>> Stashed changes
 });
 
 

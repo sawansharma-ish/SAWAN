@@ -1,6 +1,0 @@
-{
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {}
-} git add .
-git commit -m "Fix Vercel deployment"
-git push

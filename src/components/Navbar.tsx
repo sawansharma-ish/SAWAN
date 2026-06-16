@@ -47,13 +47,6 @@ export default function Navbar({ currentPage, setCurrentPage, user, logout, open
 
             {/* Right Hand: Strategic Call CTA */}
             <div className="w-[380px] flex items-center justify-end gap-3">
-              <button
-                id="nav-cta-btn"
-                onClick={() => openQuote()}
-                className="px-4 py-2 bg-primary-navy hover:bg-accent-gold text-white font-semibold rounded-xl text-xs shadow-md shadow-primary-navy/10 hover:scale-[1.01] active:scale-[0.99] transition-all duration-250"
-              >
-                Book Free Strategy Call
-              </button>
             </div>
           </div>
 
