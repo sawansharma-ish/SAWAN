@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Phone, Mail, MapPin, Loader2, Check, MessageSquare, Clock, Globe, X } from "lucide-react";
 import { motion } from "motion/react";
+import { doc, setDoc } from "firebase/firestore";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
 
 export default function Contact() {
   const [name, setName] = useState("");
@@ -25,6 +27,24 @@ export default function Contact() {
 
     setLoading(true);
     try {
+      // Sync Inquiry directly to raw Firebase Firestore database
+      const inquiryId = "inq-" + Math.random().toString(36).substr(2, 9);
+      try {
+        await setDoc(doc(db, "inquiries", inquiryId), {
+          id: inquiryId,
+          name,
+          email,
+          phone: phone || "Not Provided",
+          message,
+          timestamp: new Date().toISOString(),
+          replied: false,
+          replyText: ""
+        });
+      } catch (firebaseErr) {
+        // Log standard structured Firestore error information
+        handleFirestoreError(firebaseErr, OperationType.CREATE, `inquiries/${inquiryId}`);
+      }
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
