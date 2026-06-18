@@ -1,9 +1,22 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/feedback/(?!general)",
-      "destination": "/api/feedback/general"
+      "source": "/api/:path*",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/((?!api|assets|favicon|robots\\.txt|sitemap\\.xml).*)/?",
+      "destination": "/index.html"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FolderGit2, Send, UploadCloud, RefreshCw, Layers, Sparkles, MessageSquare, Briefcase, FileDown, PlusCircle, Check, Loader2, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -24,6 +24,8 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
   // Chat message input
   const [messageText, setMessageText] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [isArchitectTyping, setIsArchitectTyping] = useState(false);
+  const dashboardChatEndRef = useRef<HTMLDivElement>(null);
 
   // Profile update fields
   const [profName, setProfName] = useState(user?.name || "");
@@ -33,6 +35,11 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
   useEffect(() => {
     fetchUserProjects();
   }, [user]);
+
+  // Keep chat aligned at the bottom when messages or typing updates
+  useEffect(() => {
+    dashboardChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedProj?.messages, isArchitectTyping]);
 
   const fetchUserProjects = async () => {
     if (!user?.id) return;
@@ -100,7 +107,8 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !selectedProj) return;
+    const cleanText = messageText.trim();
+    if (!cleanText || !selectedProj) return;
 
     setSendingMsg(true);
     try {
@@ -110,7 +118,7 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
         body: JSON.stringify({
           projectId: selectedProj.id,
           sender: "user",
-          text: messageText.trim()
+          text: cleanText
         })
       });
 
@@ -118,6 +126,29 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
       if (response.ok && data.success) {
         setMessageText("");
         await fetchUserProjects();
+
+        // Simulate Lead Architect reviewing and responding with subtle delay
+        setIsArchitectTyping(true);
+        setTimeout(async () => {
+          try {
+            const architectReply = await fetch("/api/projects/message", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                projectId: selectedProj.id,
+                sender: "admin",
+                text: "Thank you for the update! Your lead architect has received this details. We are compiling these parameters in your project vault and will notify you as soon as review milestones advance."
+              })
+            });
+            if (architectReply.ok) {
+              await fetchUserProjects();
+            }
+          } catch (autoErr) {
+            console.error("Architect auto-sender trace skipped:", autoErr);
+          } finally {
+            setIsArchitectTyping(false);
+          }
+        }, 1800);
       }
     } catch (err) {
       console.error(err);
@@ -442,22 +473,38 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
                       </h3>
 
                       {/* Chat messages lists scrollable */}
-                      <div className="space-y-3.5 overflow-y-auto max-h-[290px] pr-1 flex flex-col pt-1">
+                      <div className="space-y-3.5 overflow-y-auto max-h-[220px] pr-1 flex flex-col pt-1">
                         {selectedProj.messages?.map((msg: any, mIdx: number) => (
                           <div
                             key={mIdx}
                             className={`p-3 rounded-2xl text-xs leading-normal max-w-[85%] ${
                               msg.sender === "user"
-                                ? "bg-slate-900 text-white rounded-tr-none ml-auto"
-                                : "bg-slate-50 border border-slate-100 text-slate-700 rounded-tl-none mr-auto"
+                                ? "bg-slate-950 text-slate-100 rounded-tr-none ml-auto"
+                                : "bg-slate-50 border border-slate-150 text-slate-800 rounded-tl-none mr-auto"
                             }`}
                           >
-                            <p className="font-medium text-slate-200">{msg.text}</p>
-                            <span className="text-[8px] opacity-60 font-mono block mt-1 text-right">
+                            <p className="font-semibold leading-relaxed">{msg.text}</p>
+                            <span className={`text-[8px] block mt-1 text-right font-mono ${
+                              msg.sender === "user" ? "text-slate-400" : "text-slate-500"
+                            }`}>
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                         ))}
+
+                        {/* Practical, beautiful jumping dots typing animation */}
+                        {isArchitectTyping && (
+                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-150 text-slate-500 px-3 py-2 rounded-2xl rounded-tl-none w-max max-w-[80%] self-start animate-pulse shadow-sm">
+                            <div className="flex items-center gap-1 py-1">
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Architect is typing...</span>
+                          </div>
+                        )}
+
+                        <div ref={dashboardChatEndRef} />
                       </div>
                     </div>
 
