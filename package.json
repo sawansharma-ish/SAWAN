@@ -3,13 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "engines": {
-    "node": "18.x"
-  },
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-    "vercel-build": "npm run build",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist",
     "test-build": "vite build",
@@ -28,9 +24,7 @@
     "nodemailer": "^8.0.10",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "axios": "^1.5.0"
-    ,
-    "esbuild": "^0.25.0"
+    "vite": "^6.2.3"
   },
   "devDependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
@@ -38,7 +32,7 @@
     "@types/node": "^22.14.0",
     "@types/nodemailer": "^8.0.0",
     "autoprefixer": "^10.4.21",
-    
+    "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
