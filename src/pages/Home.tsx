@@ -122,10 +122,10 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
                 </button>
                 <button
                   id="hero-secondary-cta"
-                  onClick={() => setCurrentPage("portfolio")}
+                  onClick={() => setCurrentPage("services")}
                   className="w-full sm:w-auto px-8 py-4 bg-primary-navy border border-white/20 text-[#FFFDF2] hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-neutral-950 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  View Our Work <ArrowRight size={14} />
+                  Explore Services <ArrowRight size={14} />
                 </button>
               </div>
               <p className="text-[11px] font-mono text-accent-gold/90 text-center lg:text-left tracking-wide">
@@ -711,77 +711,7 @@ export default function Home({ setCurrentPage, openQuote }: HomeProps) {
         </div>
       </section>
 
-      {/* 5. Before & After Case Studies showcase */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-          <div className="space-y-3">
-            <span className="text-[10px] font-mono font-bold text-black uppercase tracking-widest bg-black/5 px-3 py-1 rounded-full border border-black/10">Visible Proof</span>
-            <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight">Real Case Results, No Hypotheses</h2>
-            <p className="text-neutral-700 text-sm max-w-xl">We replace obsolete legacy static pages with blazing fast responsive architectures. Analyze the actual metrics.</p>
-          </div>
-          <button
-            id="view-all-cases"
-            onClick={() => setCurrentPage("portfolio")}
-            className="flex items-center gap-2 text-sm font-extrabold text-black hover:underline tracking-tight"
-          >
-            Review and Search Case Studies <ArrowRight size={16} />
-          </button>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-[#FFFDF2] border border-black/10 rounded-3xl overflow-hidden hover:shadow-lg transition-all">
-            <div className="relative h-64 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200"
-                alt="Client Result"
-                className="w-full h-full object-cover"
-              />
-              <span className="absolute bottom-4 left-4 bg-black text-[#FFFDF2] font-mono text-xs font-bold px-3 py-1.5 rounded-lg shadow-md border border-[#FFFDF2]/20">
-                142% SECURED PATIENTS
-              </span>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono text-black font-bold uppercase tracking-wider">Aura Dental Portal</span>
-                <span className="text-neutral-600 text-xs font-semibold">Clinics Category</span>
-              </div>
-              <h4 className="font-display font-bold text-xl text-black leading-snug">Indiranagar booking digitizer and automated patients coordinator.</h4>
-              <ul className="grid grid-cols-2 gap-2 text-xs text-neutral-600">
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Auto WhatsApp SMS</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Digital medical intake</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Top-3 Bengaluru SEO ranks</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> HIPAA Compliant Servers</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="bg-[#FFFDF2] border border-black/10 rounded-3xl overflow-hidden hover:shadow-lg transition-all">
-            <div className="relative h-64 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1200"
-                alt="Client Result 2"
-                className="w-full h-full object-cover"
-              />
-              <span className="absolute bottom-4 left-4 bg-black text-[#FFFDF2] font-mono text-xs font-bold px-3 py-1.5 rounded-lg shadow-md border border-[#FFFDF2]/20">
-                22% AVERAGE ORDER INCREASE
-              </span>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono text-black font-bold uppercase tracking-wider">Bistro Contactless Systems</span>
-                <span className="text-neutral-600 text-xs font-semibold">Restaurants Category</span>
-              </div>
-              <h4 className="font-display font-bold text-xl text-black leading-snug">QR catalogs, order tables tracking, and SMS booking templates.</h4>
-              <ul className="grid grid-cols-2 gap-2 text-xs text-neutral-600">
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Zero table waiting lags</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Automated loyalty lists</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Blazing fast phone catalog</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-black" /> Multi-branch admin panels</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 6. Why Choose Us (WICU value props) */}
       <section className="bg-black text-[#FFFDF2] py-20 px-4 sm:px-6 lg:px-8 rounded-[2rem] sm:rounded-[3rem] shadow-2xl">

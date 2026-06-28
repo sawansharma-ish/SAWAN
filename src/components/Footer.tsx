@@ -95,10 +95,8 @@ export default function Footer({ setCurrentPage, currentPage }: FooterProps) {
             <ul className="space-y-2 text-sm text-slate-300">
               <li><button onClick={() => setCurrentPage("home")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Home Page</button></li>
               <li><button onClick={() => setCurrentPage("services")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Core Systems & Services</button></li>
-              <li><button onClick={() => setCurrentPage("portfolio")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Client Case Studies</button></li>
               <li><button onClick={() => setCurrentPage("pricing")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Investment Packages</button></li>
               <li><button onClick={() => setCurrentPage("about")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Our Design Philosophy</button></li>
-              <li><button onClick={() => setCurrentPage("blog")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Growth Blog Insights</button></li>
               <li><button onClick={() => setCurrentPage("contact")} className="transition-colors cursor-pointer text-left bg-transparent text-slate-300 hover:text-accent-gold">Claim Free Audit</button></li>
             </ul>
           </div>

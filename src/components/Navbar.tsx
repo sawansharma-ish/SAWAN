@@ -17,10 +17,8 @@ export default function Navbar({ currentPage, setCurrentPage, user, logout, open
   const navItems = [
     { id: "home", label: "Home" },
     { id: "services", label: "Services" },
-    { id: "portfolio", label: "Case Studies" },
     { id: "pricing", label: "Pricing" },
     { id: "about", label: "Our Story" },
-    { id: "blog", label: "Insights" },
     { id: "contact", label: "Connect" },
   ];
 
