@@ -138,7 +138,7 @@ BEGIN
           AND role IN ('Admin', 'Super Admin', 'Staff')
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- --- PROFILES POLICIES ---
@@ -159,7 +159,8 @@ CREATE POLICY "Allow admins all access to profiles"
 -- --- LEADS POLICIES ---
 CREATE POLICY "Allow anyone to submit leads" 
     ON public.leads FOR INSERT 
-    WITH CHECK (true);
+    TO anon, authenticated
+    WITH CHECK (name IS NOT NULL AND email IS NOT NULL);
 
 CREATE POLICY "Allow admins all access to leads" 
     ON public.leads FOR ALL 
@@ -169,7 +170,8 @@ CREATE POLICY "Allow admins all access to leads"
 -- --- INQUIRIES POLICIES ---
 CREATE POLICY "Allow anyone to submit inquiries" 
     ON public.inquiries FOR INSERT 
-    WITH CHECK (true);
+    TO anon, authenticated
+    WITH CHECK (name IS NOT NULL AND email IS NOT NULL AND message IS NOT NULL);
 
 CREATE POLICY "Allow admins all access to inquiries" 
     ON public.inquiries FOR ALL 
@@ -236,16 +238,33 @@ CREATE POLICY "Allow admins all access to project files"
 
 -- --- ADMIN OTP POLICIES ---
 -- Allowed for backend server operations (checked using hashed matches or email)
-CREATE POLICY "Allow inserting and selecting OTPs" 
-    ON public.admin_otp FOR ALL 
-    USING (true)
-    WITH CHECK (true);
+CREATE POLICY "Allow inserting OTPs" 
+    ON public.admin_otp FOR INSERT 
+    TO anon, authenticated
+    WITH CHECK (expires_at > now() AND used = false);
+
+CREATE POLICY "Allow selecting OTPs" 
+    ON public.admin_otp FOR SELECT 
+    TO anon, authenticated
+    USING (expires_at > now() AND used = false);
+
+CREATE POLICY "Allow updating OTPs" 
+    ON public.admin_otp FOR UPDATE 
+    TO anon, authenticated
+    USING (expires_at > now() AND used = false)
+    WITH CHECK (used = true);
+
+CREATE POLICY "Allow deleting OTPs" 
+    ON public.admin_otp FOR DELETE 
+    TO anon, authenticated
+    USING (false);
 
 
 -- --- ADMIN AUDIT LOG POLICIES ---
 CREATE POLICY "Allow anyone to append audit logs" 
     ON public.admin_audit_log FOR INSERT 
-    WITH CHECK (true);
+    TO anon, authenticated
+    WITH CHECK (email IS NOT NULL AND action IS NOT NULL);
 
 CREATE POLICY "Allow admins to read audit logs" 
     ON public.admin_audit_log FOR SELECT 
@@ -270,9 +289,29 @@ BEGIN
     );
     RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Create the trigger
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- =========================================================================
+-- FUNCTION EXECUTION PRIVILEGES LOCKDOWN
+-- =========================================================================
+
+-- Revoke default public/anonymous/authenticated execute access on security definer functions
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC, anon, authenticated;
+
+-- Also revoke execution on public.rls_auto_enable if it exists in the database
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc 
+        JOIN pg_namespace ON pg_proc.pronamespace = pg_namespace.oid 
+        WHERE proname = 'rls_auto_enable' AND nspname = 'public'
+    ) THEN
+        EXECUTE 'REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;';
+    END IF;
+END $$;
