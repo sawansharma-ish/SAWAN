@@ -1,6 +1,1 @@
-{
-  "name": "AURA WEB",
-  "description": "Ultra-premium bespoke website architectures, custom reservation portals, and high-conversion brand design for local businesses and elite service providers.",
-  "requestFramePermissions": ["geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
+{"name":"Aura Web Studio","description":"Ultra-premium bespoke website architectures, custom reservation portals, and high-conversion brand design for local businesses and elite service providers.","requestFramePermissions":["geolocation"],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}

@@ -4,10 +4,6 @@ import Footer from "./components/Footer";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import LeadCaptureModal from "./components/LeadCaptureModal";
-import { getDocFromServer, doc } from "firebase/firestore";
-import { db } from "./lib/firebase";
-
-// Interactive page sections
 import Home from "./pages/Home";
 import Services from "./pages/Services";
 import Portfolio from "./pages/Portfolio";
@@ -21,19 +17,6 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
 export default function App() {
-  // Test Firebase Firestore Cloud Connection on application mount
-  useEffect(() => {
-    async function testConnection() {
-      try {
-        await getDocFromServer(doc(db, "test", "connection"));
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("the client is offline")) {
-          console.error("Please check your Firebase configuration.");
-        }
-      }
-    }
-    testConnection();
-  }, []);
 
   const [currentPage, setCurrentPage] = useState(() => {
     // Parse path on initial load for SEO-perfect deep linking

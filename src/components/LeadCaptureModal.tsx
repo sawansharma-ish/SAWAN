@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Check, ArrowRight, Loader2, Award, ClipboardCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { doc, setDoc } from "firebase/firestore";
-import { db, handleFirestoreError, OperationType } from "../lib/firebase";
+
 
 interface LeadCaptureModalProps {
   isOpen: boolean;
@@ -67,25 +66,7 @@ export default function LeadCaptureModal({ isOpen, onClose, preselectedService, 
 
     setLoading(true);
     try {
-      // Sync with Firebase Firestore
-      const leadId = "lead-" + Math.random().toString(36).substr(2, 9);
-      try {
-        await setDoc(doc(db, "leads", leadId), {
-          id: leadId,
-          name,
-          phone: phone || "Not Provided",
-          email,
-          businessName,
-          service,
-          budget,
-          message: message || "No message provided",
-          timestamp: new Date().toISOString(),
-          status: "new"
-        });
-      } catch (firebaseErr) {
-        // Log standard structured Firestore error information
-        handleFirestoreError(firebaseErr, OperationType.CREATE, `leads/${leadId}`);
-      }
+
 
       const response = await fetch("/api/leads", {
         method: "POST",

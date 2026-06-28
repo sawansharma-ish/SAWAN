@@ -44,7 +44,11 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
   const fetchUserProjects = async () => {
     if (!user?.id) return;
     try {
-      const res = await fetch(`/api/projects/user/${user.id}`);
+      const res = await fetch(`/api/projects/user/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+        }
+      });
       const data = await res.json();
       if (data.projects) {
         setProjects(data.projects);
@@ -75,7 +79,10 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
     try {
       const response = await fetch("/api/projects/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+        },
         body: JSON.stringify({
           userId: user.id,
           userName: user.name,
@@ -114,7 +121,10 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
     try {
       const response = await fetch("/api/projects/message", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+        },
         body: JSON.stringify({
           projectId: selectedProj.id,
           sender: "user",
@@ -133,7 +143,10 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
           try {
             const architectReply = await fetch("/api/projects/message", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+              },
               body: JSON.stringify({
                 projectId: selectedProj.id,
                 sender: "admin",
@@ -164,7 +177,10 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
     try {
       const response = await fetch("/api/projects/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+        },
         body: JSON.stringify({
           projectId: selectedProj.id,
           fileName: file.name,
@@ -187,7 +203,10 @@ export default function ClientDashboard({ user, onUpdateProfile }: ClientDashboa
     try {
       const response = await fetch("/api/auth/profile/update", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("aura_admin_token")}`
+        },
         body: JSON.stringify({
           id: user.id,
           name: profName,

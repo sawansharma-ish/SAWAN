@@ -1336,13 +1336,48 @@ app.post("/api/auth/register", (req, res) => {
     ]
   };
 
-  db.users.push(newUser);
-  writeDB(db);
+  // Synchronize user to Supabase Auth & Profiles
+  const runRegisterSync = async () => {
+    try {
+      const clientSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: { persistSession: false }
+      });
 
-  logAuditEvent(newUser.id, newUser.email, "REGISTRATION_SUCCESS", "registration_portal", req.ip || "127.0.0.1", "Completed profile setup. Passcode secured with PBKDF2.", "INFO", req.headers["user-agent"]);
+      const { data: signUpData, error: signUpError } = await clientSupabase.auth.signUp({
+        email: cleanEmail,
+        password: password,
+        options: {
+          data: {
+            full_name: cleanName,
+            phone: cleanPhone,
+            role: "Client"
+          }
+        }
+      });
 
-  const { passwordHash, ...userPayload } = newUser;
-  res.status(201).json({ success: true, user: userPayload });
+      if (signUpError) {
+        console.warn("[Supabase Register Warning]", signUpError.message);
+        return res.status(400).json({ error: `Database Registration Failure: ${signUpError.message}` });
+      }
+
+      if (signUpData?.user) {
+        newUser.id = signUpData.user.id;
+      }
+
+      db.users.push(newUser);
+      writeDB(db);
+
+      logAuditEvent(newUser.id, newUser.email, "REGISTRATION_SUCCESS", "registration_portal", req.ip || "127.0.0.1", "Completed profile setup. Passcode secured with PBKDF2.", "INFO", req.headers["user-agent"]);
+
+      const { passwordHash, ...userPayload } = newUser;
+      res.status(201).json({ success: true, user: userPayload });
+    } catch (supabaseErr: any) {
+      console.error("[Supabase Register Connection Error]", supabaseErr);
+      return res.status(500).json({ error: "Registration failed due to database connection error." });
+    }
+  };
+
+  runRegisterSync();
 });
 
 app.post("/api/auth/login", async (req, res) => {
@@ -1395,7 +1430,11 @@ app.post("/api/auth/login", async (req, res) => {
   // 3. Authenticate with Supabase Auth or Local Seed Users
   // Attempt Supabase Native Auth
   try {
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const clientSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false }
+    });
+
+    const { data: authData, error: authError } = await clientSupabase.auth.signInWithPassword({
       email: lowerEmail,
       password: password
     });
@@ -1408,7 +1447,7 @@ app.post("/api/auth/login", async (req, res) => {
 
       // Query database Profiles table for explicit role and parameters
       try {
-        const { data: profile } = await supabase
+        const { data: profile } = await clientSupabase
           .from("profiles")
           .select("*")
           .eq("id", authData.user.id)
@@ -1905,10 +1944,15 @@ app.post("/api/auth/reset-password", (req, res) => {
 });
 
 // PROFILE BIOMETRICS UPDATE
-app.post("/api/auth/profile/update", (req, res) => {
+app.post("/api/auth/profile/update", requireAuth(), async (req: any, res) => {
   const { id, name, phone } = req.body;
   if (!id) {
     return res.status(400).json({ error: "No user trace parameter provided." });
+  }
+
+  // Security Check: Enforce user profile ownership or Admin rights
+  if (req.userSession.userId !== id && !["Super Admin", "Admin", "Staff"].includes(req.userSession.role)) {
+    return res.status(403).json({ error: "Security Failure: Lacking permissions to modify this profile identity." });
   }
 
   const db = readDB();
@@ -1926,6 +1970,23 @@ app.post("/api/auth/profile/update", (req, res) => {
     details: `Updated personal bio fields: [Name: ${name || user.name}, Phone: ${phone || user.phone}]`
   });
   writeDB(db);
+
+  // Sync profile details to Supabase database
+  try {
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .update({
+        full_name: name || user.name,
+        phone: phone || user.phone
+      })
+      .eq("id", id);
+
+    if (profileErr) {
+      console.warn("[Supabase Profile Sync Warning]", profileErr.message);
+    }
+  } catch (err: any) {
+    console.error("[Supabase Profile Sync Connection Failure]", err.message || err);
+  }
 
   const { passwordHash, ...userPayload } = user;
   res.json({ success: true, user: userPayload });
@@ -2420,17 +2481,28 @@ app.post("/api/pricing/track", (req, res) => {
 
 
 // PROJECT MANAGEMENT (CLIENT PORTAL)
-app.get("/api/projects/user/:userId", (req, res) => {
+app.get("/api/projects/user/:userId", requireAuth(), (req: any, res) => {
   const { userId } = req.params;
+
+  // Security Check: Enforce user project ownership or Admin rights
+  if (req.userSession.userId !== userId && !["Super Admin", "Admin", "Staff"].includes(req.userSession.role)) {
+    return res.status(403).json({ error: "Security Failure: Lacking permissions to view projects for this user identity." });
+  }
+
   const db = readDB();
   const userProjects = db.projects.filter(p => p.userId === userId);
   res.json({ projects: userProjects });
 });
 
-app.post("/api/projects/create", (req, res) => {
+app.post("/api/projects/create", requireAuth(), async (req: any, res) => {
   const { userId, userName, userEmail, title, description, serviceType, budget, timeline } = req.body;
   if (!userId || !title || !description || !serviceType) {
     return res.status(400).json({ error: "Missing required core project coordinates." });
+  }
+
+  // Security Check: Enforce project registration ownership or Admin rights
+  if (req.userSession.userId !== userId && !["Super Admin", "Admin", "Staff"].includes(req.userSession.role)) {
+    return res.status(403).json({ error: "Security Failure: Lacking permissions to register a project under this user identity." });
   }
 
   const db = readDB();
@@ -2466,10 +2538,42 @@ app.post("/api/projects/create", (req, res) => {
   }
 
   writeDB(db);
+
+  // Sync project to Supabase
+  try {
+    const { error: projErr } = await supabase.from("projects").insert([{
+      id: newProject.id,
+      userId: newProject.userId,
+      userName: newProject.userName,
+      userEmail: newProject.userEmail,
+      title: newProject.title,
+      description: newProject.description,
+      serviceType: newProject.serviceType,
+      budget: newProject.budget,
+      timeline: newProject.timeline,
+      progress: newProject.progress,
+      status: newProject.status,
+      submissionDate: newProject.submissionDate
+    }]);
+
+    if (projErr) console.warn("[Supabase Project Sync Warning]", projErr.message);
+
+    const { error: msgErr } = await supabase.from("project_messages").insert([{
+      projectId: newProject.id,
+      sender: "admin",
+      text: newProject.messages[0].text,
+      timestamp: newProject.messages[0].timestamp
+    }]);
+
+    if (msgErr) console.warn("[Supabase Project Welcome Msg Sync Warning]", msgErr.message);
+  } catch (err: any) {
+    console.error("[Supabase Project Sync Failure]", err.message || err);
+  }
+
   res.status(201).json({ success: true, project: newProject });
 });
 
-app.post("/api/projects/message", (req, res) => {
+app.post("/api/projects/message", requireAuth(), async (req: any, res) => {
   const { projectId, sender, text } = req.body;
   if (!projectId || !sender || !text) {
     return res.status(400).json({ error: "Project tracking code and draft content required." });
@@ -2481,6 +2585,11 @@ app.post("/api/projects/message", (req, res) => {
     return res.status(404).json({ error: "Target project system trace not recovered." });
   }
 
+  // Security Check: Enforce user messaging project ownership or Admin rights
+  if (req.userSession.userId !== proj.userId && !["Super Admin", "Admin", "Staff"].includes(req.userSession.role)) {
+    return res.status(403).json({ error: "Security Failure: Lacking permissions to send messages to this project." });
+  }
+
   proj.messages.push({
     sender,
     text,
@@ -2488,11 +2597,26 @@ app.post("/api/projects/message", (req, res) => {
   });
 
   writeDB(db);
+
+  // Sync message to Supabase
+  try {
+    const { error: msgErr } = await supabase.from("project_messages").insert([{
+      projectId,
+      sender,
+      text,
+      timestamp: new Date().toISOString()
+    }]);
+
+    if (msgErr) console.warn("[Supabase Msg Sync Warning]", msgErr.message);
+  } catch (err: any) {
+    console.error("[Supabase Msg Sync Failure]", err.message || err);
+  }
+
   res.json({ success: true, messages: proj.messages });
 });
 
 // FILE UPLOAD SIMULATOR (Saves list details on server for persistent display)
-app.post("/api/projects/upload", (req, res) => {
+app.post("/api/projects/upload", requireAuth(), async (req: any, res) => {
   const { projectId, fileName, fileSize } = req.body;
   if (!projectId || !fileName) {
     return res.status(400).json({ error: "Target coordinates missing." });
@@ -2502,6 +2626,11 @@ app.post("/api/projects/upload", (req, res) => {
   const proj = db.projects.find(p => p.id === projectId);
   if (!proj) {
     return res.status(404).json({ error: "Project indexing mismatch." });
+  }
+
+  // Security Check: Enforce user file upload project ownership or Admin rights
+  if (req.userSession.userId !== proj.userId && !["Super Admin", "Admin", "Staff"].includes(req.userSession.role)) {
+    return res.status(403).json({ error: "Security Failure: Lacking permissions to upload files to this project." });
   }
 
   const newFile: ProjectFile = {
@@ -2519,6 +2648,31 @@ app.post("/api/projects/upload", (req, res) => {
   });
 
   writeDB(db);
+
+  // Sync file record to Supabase
+  try {
+    const { error: fileErr } = await supabase.from("project_files").insert([{
+      projectId,
+      name: newFile.name,
+      url: newFile.url,
+      size: newFile.size,
+      uploadedAt: newFile.uploadedAt
+    }]);
+
+    if (fileErr) console.warn("[Supabase File Sync Warning]", fileErr.message);
+
+    const { error: msgErr } = await supabase.from("project_messages").insert([{
+      projectId,
+      sender: "user",
+      text: proj.messages[proj.messages.length - 1].text,
+      timestamp: proj.messages[proj.messages.length - 1].timestamp
+    }]);
+
+    if (msgErr) console.warn("[Supabase File Upload Msg Sync Warning]", msgErr.message);
+  } catch (err: any) {
+    console.error("[Supabase File Sync Failure]", err.message || err);
+  }
+
   res.json({ success: true, files: proj.files, messages: proj.messages });
 });
 
