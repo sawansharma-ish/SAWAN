@@ -152,7 +152,7 @@ CREATE POLICY "Allow users to update their own profiles"
     WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Allow admins all access to profiles" 
-    ON public.profiles ALL 
+    ON public.profiles FOR ALL 
     USING (public.is_admin());
 
 
@@ -162,7 +162,7 @@ CREATE POLICY "Allow anyone to submit leads"
     WITH CHECK (true);
 
 CREATE POLICY "Allow admins all access to leads" 
-    ON public.leads ALL 
+    ON public.leads FOR ALL 
     USING (public.is_admin());
 
 
@@ -172,7 +172,7 @@ CREATE POLICY "Allow anyone to submit inquiries"
     WITH CHECK (true);
 
 CREATE POLICY "Allow admins all access to inquiries" 
-    ON public.inquiries ALL 
+    ON public.inquiries FOR ALL 
     USING (public.is_admin());
 
 
@@ -186,7 +186,7 @@ CREATE POLICY "Allow clients to create their own projects"
     WITH CHECK (auth.uid() = "userId");
 
 CREATE POLICY "Allow admins all access to projects" 
-    ON public.projects ALL 
+    ON public.projects FOR ALL 
     USING (public.is_admin());
 
 
@@ -208,7 +208,7 @@ CREATE POLICY "Allow clients to post messages to their own projects"
     ) AND sender = 'user');
 
 CREATE POLICY "Allow admins all access to project messages" 
-    ON public.project_messages ALL 
+    ON public.project_messages FOR ALL 
     USING (public.is_admin());
 
 
@@ -230,14 +230,14 @@ CREATE POLICY "Allow clients to upload files to their own projects"
     ));
 
 CREATE POLICY "Allow admins all access to project files" 
-    ON public.project_files ALL 
+    ON public.project_files FOR ALL 
     USING (public.is_admin());
 
 
 -- --- ADMIN OTP POLICIES ---
 -- Allowed for backend server operations (checked using hashed matches or email)
 CREATE POLICY "Allow inserting and selecting OTPs" 
-    ON public.admin_otp ALL 
+    ON public.admin_otp FOR ALL 
     USING (true)
     WITH CHECK (true);
 
