@@ -5,6 +5,10 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dns from "dns";
 import nodemailer from "nodemailer";
 import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 // Ensure DNS works smoothly
 dns.setDefaultResultOrder("ipv4first");
