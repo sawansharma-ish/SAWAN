@@ -2090,7 +2090,20 @@ app.post("/api/contact", (req, res) => {
   db.enquiries.push(newEnquiry);
   writeDB(db);
 
-  saveToSupabase("inquiries", newInq);
+  // Map direct contact inquiry to the unified leads table format in Supabase
+  const mappedLead = {
+    id: newInq.id,
+    name: newInq.name,
+    phone: newInq.phone,
+    email: newInq.email,
+    businessName: "Direct Contact Form",
+    service: "General Inquiry",
+    budget: "Not Specified",
+    message: newInq.message,
+    status: "new",
+    timestamp: newInq.timestamp
+  };
+  saveToSupabase("leads", mappedLead);
 
   // Trigger WhatsApp delivery
   triggerWhatsAppAlert(newEnquiry);
